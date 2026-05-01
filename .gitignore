@@ -36,8 +36,8 @@ out/
 ### VS Code ###
 .vscode/
 
-src/resources/firebase/ajou-project-cafd9-firebase-adminsdk-fbsvc-e6d8a32d57.json
-src/resources/application.yml
-src/resources/application-prod.yml
+src/main/resources/firebase/ajou-project-cafd9-firebase-adminsdk-fbsvc-e6d8a32d57.json
+src/main/resources/application.yml
+src/main/resources/application-prod.yml
 
 
