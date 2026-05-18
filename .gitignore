@@ -44,3 +44,5 @@ docker-compose.yml
 gradlew
 gradlew.bat
 gradle/
+
+src/test/

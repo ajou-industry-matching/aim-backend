@@ -172,9 +172,15 @@ public class PostCommandService {
             throw new CustomException(ErrorCode.BOARD_MISMATCH);
         }
 
-        if (!post.isOwner(user.getUserId()) && !user.isAdmin()) {
-            throw new CustomException(ErrorCode.NO_PERMISSION);
+        if (post.isOwner(user.getUserId())) {
+            return;
         }
+
+        if (user.isAdmin() && post.isPublic()) {
+            return;
+        }
+
+        throw new CustomException(ErrorCode.NO_PERMISSION);
     }
 
     private void savePostKeywords(Post post, List<Long> keywordIds) {
