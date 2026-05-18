@@ -14,8 +14,13 @@ output "cloud_run_uri" {
 }
 
 output "deployer_service_account_email" {
-  description = "Service account email to use when creating the GitHub Actions JSON key."
+  description = "Service account email to set as the GitHub Actions GCP_SERVICE_ACCOUNT variable."
   value       = google_service_account.deployer.email
+}
+
+output "github_workload_identity_provider" {
+  description = "Workload Identity Provider resource name to set as the GitHub Actions GCP_WORKLOAD_IDENTITY_PROVIDER variable."
+  value       = "projects/${data.google_project.current.number}/locations/global/workloadIdentityPools/${google_iam_workload_identity_pool.github.workload_identity_pool_id}/providers/${google_iam_workload_identity_pool_provider.github.workload_identity_pool_provider_id}"
 }
 
 output "runtime_service_account_email" {

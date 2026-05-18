@@ -7,6 +7,7 @@
 - Artifact Registry Docker repository
 - GitHub Actions 배포용 서비스 계정
 - Cloud Run runtime 서비스 계정
+- GitHub OIDC Workload Identity Pool/Provider
 - Cloud Run v2 서비스 baseline
 - Firebase Admin SDK credential용 Secret Manager secret
 - Artifact Registry, Cloud Run, Secret Manager IAM
@@ -17,19 +18,28 @@ Cloud Run 서비스에는 최초 생성용 `bootstrap_image`가 필요하다. �
 
 `google_cloud_run_v2_service.app`는 `template[0].containers[0].image`를 `ignore_changes`로 둔다. 따라서 GitHub Actions가 배포한 최신 image가 다음 `terraform apply`에서 이전 bootstrap image로 되돌아가지 않는다.
 
-## 서비스 계정 JSON 키
+## GitHub Actions Workload Identity Federation
 
-Terraform은 배포용 서비스 계정과 권한만 만든다. 서비스 계정 JSON key는 Terraform state에 private key가 남지 않도록 Terraform으로 만들지 않는다.
+Terraform은 GitHub Actions가 장기 서비스 계정 JSON key 없이 배포할 수 있도록 Workload Identity Pool, OIDC Provider, 배포용 서비스 계정 impersonation 권한을 함께 만든다.
 
-서비스 계정 생성 후 다음처럼 키를 만들고 GitHub Secret `GCP_SA_KEY`에 등록한다.
+GitHub Actions는 `main` 브랜치의 `ajou-industry-matching/aim-backend` 실행에서만 배포용 서비스 계정을 impersonate할 수 있다. 이 제한은 `github_repository`, `github_deploy_ref` 변수로 조정할 수 있다.
+
+`terraform apply` 후 GitHub Actions Variables에 다음 값을 등록한다.
+
+| 이름 | Terraform output |
+| --- | --- |
+| `GCP_WORKLOAD_IDENTITY_PROVIDER` | `github_workload_identity_provider` |
+| `GCP_SERVICE_ACCOUNT` | `deployer_service_account_email` |
 
 ```bash
-gcloud iam service-accounts keys create gcp-sa-key.json \
-  --iam-account "$(terraform output -raw deployer_service_account_email)" \
-  --project "<PROJECT_ID>"
+gh variable set GCP_WORKLOAD_IDENTITY_PROVIDER \
+  --body "$(terraform output -raw github_workload_identity_provider)"
+
+gh variable set GCP_SERVICE_ACCOUNT \
+  --body "$(terraform output -raw deployer_service_account_email)"
 ```
 
-키 파일 내용 전체를 GitHub repository secret `GCP_SA_KEY`로 저장한 뒤 로컬 파일은 삭제한다.
+이 방식은 GitHub에 GCP private key를 저장하지 않고, workflow 실행 시점의 짧은 OIDC 토큰으로만 배포 권한을 얻는다.
 
 ## Firebase Secret
 

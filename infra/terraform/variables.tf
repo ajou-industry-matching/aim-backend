@@ -44,6 +44,30 @@ variable "runtime_service_account_id" {
   default     = "aim-backend-runtime"
 }
 
+variable "github_repository" {
+  description = "GitHub repository allowed to impersonate the deployer service account through Workload Identity Federation."
+  type        = string
+  default     = "ajou-industry-matching/aim-backend"
+}
+
+variable "github_deploy_ref" {
+  description = "Git ref allowed to deploy through Workload Identity Federation."
+  type        = string
+  default     = "refs/heads/main"
+}
+
+variable "github_workload_identity_pool_id" {
+  description = "Workload Identity Pool ID used for GitHub Actions OIDC."
+  type        = string
+  default     = "aim-backend-github"
+}
+
+variable "github_workload_identity_provider_id" {
+  description = "Workload Identity Pool Provider ID used for GitHub Actions OIDC."
+  type        = string
+  default     = "github"
+}
+
 variable "firebase_credentials_secret_id" {
   description = "Secret Manager secret ID for the Firebase Admin SDK JSON credential."
   type        = string
@@ -96,6 +120,14 @@ variable "environment_variables" {
   description = "Additional non-secret environment variables for the Cloud Run service."
   type        = map(string)
   default     = {}
+
+  validation {
+    condition = length([
+      for key in keys(var.environment_variables) : key
+      if contains(["FIREBASE_CREDENTIALS_PATH", "FIREBASE_STORAGE_BUCKET"], key)
+    ]) == 0
+    error_message = "environment_variables must not contain FIREBASE_CREDENTIALS_PATH or FIREBASE_STORAGE_BUCKET."
+  }
 }
 
 variable "labels" {
