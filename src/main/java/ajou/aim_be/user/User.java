@@ -96,6 +96,14 @@ public class User {
         return this.getAdminRole() == AdminRole.ADMIN || this.adminRole == AdminRole.SUPER_ADMIN;
     }
 
+    public void updateName(String name) {
+        this.name = name;
+    }
+
+    public void updateProfileBio(String profileBio) {
+        this.profileBio = profileBio;
+    }
+
     // todo : 사용하는 걸로 바꾸기
     public boolean isActive() {
         return this.userStatus == UserStatus.ACTIVE;

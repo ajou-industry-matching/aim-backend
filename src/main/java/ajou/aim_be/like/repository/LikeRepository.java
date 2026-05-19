@@ -28,6 +28,8 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
 
     void deleteByPost_PostIdAndUser_UserId(Long postId, Long userId);
 
+    long countByPost_User_UserId(Long userId);
+
     // 좋아요 목록용
     Page<Like> findByUser_UserIdAndPost_VisibilityOrderByCreatedAtDesc(Long userId, Visibility visibility, Pageable pageable);
 

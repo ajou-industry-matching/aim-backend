@@ -31,6 +31,9 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
             Pageable pageable
     );
 
+    long countByUser_UserId(Long userId);
+
+
 //    @Query("""
 //    SELECT DISTINCT p FROM Post p
 //    LEFT JOIN PostKeyword pk ON pk.post = p
