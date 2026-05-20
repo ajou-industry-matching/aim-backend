@@ -1,6 +1,11 @@
 HELP.md
 .gradle
 build/
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
@@ -37,8 +42,8 @@ out/
 .vscode/
 
 src/main/resources/firebase/ajou-project-cafd9-firebase-adminsdk-fbsvc-e6d8a32d57.json
-src/main/resources/application.yml
 src/main/resources/application-prod.yml
+src/main/resources/application-local.yml
 
 docker-compose.yml
 gradlew
@@ -46,3 +51,6 @@ gradlew.bat
 gradle/
 
 src/test/
+
+# Google GitHub Actions temporary credentials
+gha-creds-*.json
