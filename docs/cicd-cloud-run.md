@@ -39,7 +39,8 @@ job 구조:
 
 - GitHub OIDC와 Google Workload Identity Federation으로 GCP 인증
 - Artifact Registry Docker auth 설정
-- Docker image build
+- `verify` job에서 생성한 bootJar artifact 재사용
+- Docker Buildx cache 기반 Docker image build
 - Artifact Registry push
 - Cloud Run revision 배포
 
@@ -108,6 +109,17 @@ Cloud Run runtime 계약:
 - `DDL_AUTO=update`
 
 DB 접속 정보와 비밀번호는 저장소와 Terraform 변수 파일에 넣지 않는다. 현재 GitHub Actions 배포 workflow는 `DB_URL`, `DB_PASSWORD`를 GitHub Actions Secret으로 받고, `DB_USER`, `DDL_AUTO`를 GitHub Actions Variable로 받아 Cloud Run revision 환경변수에 주입한다.
+
+## Image Build Optimization
+
+Dockerfile은 로컬 빌드가 가능한 멀티 스테이지 구조를 유지한다. 기본 `runtime` target은 Docker build 내부에서 Gradle `bootJar`를 실행하고, GitHub Actions 배포는 `verify` job의 `bootJar` 결과물을 artifact로 받아 `runtime-prebuilt` target을 빌드한다.
+
+배포 workflow의 이미지 최적화 계약:
+
+- `verify`: `./gradlew test bootJar --no-daemon` 실행 후 `build/libs/aim-be.jar` artifact 업로드
+- `deploy`: artifact 다운로드 후 Docker 내부 Gradle 빌드 없이 `runtime-prebuilt` target 빌드
+- Docker Buildx `type=gha` cache로 레이어 캐시 재사용
+- 최종 런타임 이미지는 non-root distroless Java 17 기반으로 실행
 
 ## 최초 설정 순서
 
