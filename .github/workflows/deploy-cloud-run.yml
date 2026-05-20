@@ -17,9 +17,9 @@ concurrency:
 env:
   GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
   GCP_REGION: ${{ vars.GCP_REGION || 'asia-northeast3' }}
-  CLOUD_RUN_SERVICE: ${{ vars.CLOUD_RUN_SERVICE || 'aim-backend' }}
-  ARTIFACT_REGISTRY_REPOSITORY: ${{ vars.ARTIFACT_REGISTRY_REPOSITORY || 'aim' }}
-  IMAGE_NAME: ${{ vars.IMAGE_NAME || 'aim-backend' }}
+  CLOUD_RUN_SERVICE: ${{ vars.CLOUD_RUN_SERVICE || 'aim-be' }}
+  ARTIFACT_REGISTRY_REPOSITORY: ${{ vars.ARTIFACT_REGISTRY_REPOSITORY || 'app-repo' }}
+  IMAGE_NAME: ${{ vars.IMAGE_NAME || 'aim-be' }}
   GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
   GCP_SERVICE_ACCOUNT: ${{ vars.GCP_SERVICE_ACCOUNT }}
 

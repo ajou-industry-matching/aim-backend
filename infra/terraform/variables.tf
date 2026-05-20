@@ -12,19 +12,19 @@ variable "region" {
 variable "repository_id" {
   description = "Artifact Registry Docker repository ID."
   type        = string
-  default     = "aim"
+  default     = "app-repo"
 }
 
 variable "service_name" {
   description = "Cloud Run service name."
   type        = string
-  default     = "aim-backend"
+  default     = "aim-be"
 }
 
 variable "image_name" {
   description = "Container image name inside Artifact Registry."
   type        = string
-  default     = "aim-backend"
+  default     = "aim-be"
 }
 
 variable "bootstrap_image" {
@@ -80,6 +80,30 @@ variable "firebase_storage_bucket" {
   default     = "ajou-project-cafd9.firebasestorage.app"
 }
 
+variable "db_password_secret_id" {
+  description = "Secret Manager secret ID for the application database password."
+  type        = string
+  default     = "aim-be-db-password"
+}
+
+variable "db_url" {
+  description = "JDBC URL used by the backend."
+  type        = string
+  default     = "jdbc:mysql://161.33.46.41:3306/aim?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8"
+}
+
+variable "db_user" {
+  description = "Database username used by the backend."
+  type        = string
+  default     = "aim_be"
+}
+
+variable "ddl_auto" {
+  description = "Hibernate ddl-auto mode."
+  type        = string
+  default     = "update"
+}
+
 variable "container_port" {
   description = "Container port exposed by the Spring Boot application."
   type        = number
@@ -124,9 +148,9 @@ variable "environment_variables" {
   validation {
     condition = length([
       for key in keys(var.environment_variables) : key
-      if contains(["FIREBASE_CREDENTIALS_PATH", "FIREBASE_STORAGE_BUCKET"], key)
+      if contains(["DB_PASSWORD", "DB_URL", "DB_USER", "DDL_AUTO", "FIREBASE_CREDENTIALS_PATH", "FIREBASE_STORAGE_BUCKET"], key)
     ]) == 0
-    error_message = "environment_variables must not contain FIREBASE_CREDENTIALS_PATH or FIREBASE_STORAGE_BUCKET."
+    error_message = "environment_variables must not contain DB_PASSWORD, DB_URL, DB_USER, DDL_AUTO, FIREBASE_CREDENTIALS_PATH, or FIREBASE_STORAGE_BUCKET."
   }
 }
 
@@ -134,7 +158,7 @@ variable "labels" {
   description = "Labels applied to managed Google Cloud resources."
   type        = map(string)
   default = {
-    app     = "aim-backend"
+    app     = "aim-be"
     managed = "terraform"
   }
 }

@@ -42,8 +42,8 @@ out/
 .vscode/
 
 src/main/resources/firebase/ajou-project-cafd9-firebase-adminsdk-fbsvc-e6d8a32d57.json
-src/main/resources/application.yml
 src/main/resources/application-prod.yml
+src/main/resources/application-local.yml
 
 docker-compose.yml
 

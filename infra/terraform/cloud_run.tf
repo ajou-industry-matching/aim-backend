@@ -39,6 +39,32 @@ resource "google_cloud_run_v2_service" "app" {
         value = var.firebase_storage_bucket
       }
 
+      env {
+        name  = "DB_URL"
+        value = var.db_url
+      }
+
+      env {
+        name  = "DB_USER"
+        value = var.db_user
+      }
+
+      env {
+        name  = "DDL_AUTO"
+        value = var.ddl_auto
+      }
+
+      env {
+        name = "DB_PASSWORD"
+
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.db_password.secret_id
+            version = "latest"
+          }
+        }
+      }
+
       dynamic "env" {
         for_each = var.environment_variables
 
@@ -98,6 +124,7 @@ resource "google_cloud_run_v2_service" "app" {
   depends_on = [
     google_artifact_registry_repository_iam_member.runtime_reader,
     google_project_service.required,
+    google_secret_manager_secret_iam_member.runtime_db_password_secret_accessor,
     google_secret_manager_secret_iam_member.runtime_firebase_secret_accessor,
   ]
 }

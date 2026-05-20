@@ -32,3 +32,8 @@ output "firebase_credentials_secret_id" {
   description = "Secret Manager secret ID for Firebase Admin SDK credentials."
   value       = google_secret_manager_secret.firebase_credentials.secret_id
 }
+
+output "db_password_secret_id" {
+  description = "Secret Manager secret ID for the application database password."
+  value       = google_secret_manager_secret.db_password.secret_id
+}
