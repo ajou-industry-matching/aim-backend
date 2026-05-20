@@ -10,6 +10,7 @@
 - GitHub OIDC Workload Identity Pool/Provider
 - Cloud Run v2 서비스 baseline
 - Firebase Admin SDK credential용 Secret Manager secret
+- DB password용 Secret Manager secret
 - Artifact Registry, Cloud Run, Secret Manager IAM
 
 ## 이미지 소유권
@@ -56,6 +57,23 @@ Cloud Run에는 다음 계약으로 mount된다.
 - mount path: `/secrets/firebase-adminsdk.json`
 - env: `FIREBASE_CREDENTIALS_PATH=/secrets/firebase-adminsdk.json`
 - env: `FIREBASE_STORAGE_BUCKET=<bucket>`
+
+## DB Password Secret
+
+DB 비밀번호는 저장소, `terraform.tfvars`, Terraform state에 넣지 않는다. Terraform은 secret container와 Cloud Run env 연결만 관리하고, 실제 secret version은 별도 명령으로 등록한다.
+
+```bash
+printf '%s' '<DB_PASSWORD>' | gcloud secrets versions add "$(terraform output -raw db_password_secret_id)" \
+  --data-file=- \
+  --project "<PROJECT_ID>"
+```
+
+Cloud Run에는 다음 계약으로 주입된다.
+
+- env: `DB_URL=<JDBC URL>`
+- env: `DB_USER=aim_be`
+- env: `DB_PASSWORD=<Secret Manager latest version>`
+- env: `DDL_AUTO=update`
 
 ## 실행 예시
 

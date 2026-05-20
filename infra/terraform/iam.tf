@@ -32,3 +32,10 @@ resource "google_secret_manager_secret_iam_member" "runtime_firebase_secret_acce
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_service_account.runtime.email}"
 }
+
+resource "google_secret_manager_secret_iam_member" "runtime_db_password_secret_accessor" {
+  project   = var.project_id
+  secret_id = google_secret_manager_secret.db_password.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.runtime.email}"
+}

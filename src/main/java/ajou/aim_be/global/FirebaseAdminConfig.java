@@ -29,9 +29,10 @@ public class FirebaseAdminConfig {
 
     public FirebaseAdminConfig(
             @Value("${firebase.credentials.path:}") String credentialsPath,
+            @Value("${firebase.config.path:}") String legacyConfigPath,
             @Value("${firebase.credentials.json:}") String credentialsJson,
             @Value("${firebase.storage.bucket:ajou-project-cafd9.firebasestorage.app}") String storageBucket) {
-        this.credentialsPath = credentialsPath;
+        this.credentialsPath = StringUtils.hasText(credentialsPath) ? credentialsPath : legacyConfigPath;
         this.credentialsJson = credentialsJson;
         this.storageBucket = storageBucket;
     }

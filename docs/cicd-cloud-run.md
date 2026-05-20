@@ -57,9 +57,9 @@ Repository Settings > Secrets and variables > Actions > Variables에 등록한�
 | --- | --- | --- |
 | `GCP_PROJECT_ID` | `my-project` | Google Cloud project ID |
 | `GCP_REGION` | `asia-northeast3` | Cloud Run 및 Artifact Registry region |
-| `CLOUD_RUN_SERVICE` | `aim-backend` | Cloud Run service name |
-| `ARTIFACT_REGISTRY_REPOSITORY` | `aim` | Artifact Registry repository ID |
-| `IMAGE_NAME` | `aim-backend` | Docker image name |
+| `CLOUD_RUN_SERVICE` | `aim-be` | Cloud Run service name |
+| `ARTIFACT_REGISTRY_REPOSITORY` | `app-repo` | Artifact Registry repository ID |
+| `IMAGE_NAME` | `aim-be` | Docker image name |
 | `GCP_WORKLOAD_IDENTITY_PROVIDER` | `projects/123456789/locations/global/workloadIdentityPools/aim-backend-github/providers/github` | Terraform output `github_workload_identity_provider` |
 | `GCP_SERVICE_ACCOUNT` | `github-actions-deployer@my-project.iam.gserviceaccount.com` | Terraform output `deployer_service_account_email` |
 
@@ -81,6 +81,7 @@ Terraform은 앱 배포 실행 도구가 아니다. 다음 GCP 기준 상태를 
 - GitHub Actions impersonation IAM
 - IAM
 - Secret Manager
+- DB password secret env 연결
 - Cloud Run secret mount/env 연결
 
 Cloud Run image revision은 GitHub Actions가 관리한다. Terraform은 `template[0].containers[0].image` drift를 되돌리지 않도록 구성되어 있다.
@@ -97,6 +98,17 @@ Cloud Run runtime 계약:
 
 로컬 개발에서는 기존 classpath JSON fallback도 유지된다.
 
+## Database Credential
+
+DB는 Oracle Cloud에 올라간 MySQL을 사용한다. 애플리케이션 이미지는 비밀번호 없이 다음 환경변수 계약으로 실행된다.
+
+- `DB_URL=jdbc:mysql://161.33.46.41:3306/aim?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8`
+- `DB_USER=aim_be`
+- `DB_PASSWORD=<Secret Manager latest version>`
+- `DDL_AUTO=update`
+
+DB 비밀번호는 저장소와 Terraform 변수 파일에 넣지 않고 Secret Manager secret version으로만 등록한다.
+
 ## 최초 설정 순서
 
 1. Terraform 변수 값을 준비한다.
@@ -104,12 +116,13 @@ Cloud Run runtime 계약:
 3. `terraform init`, `terraform fmt -check`, `terraform validate`, `terraform plan`을 실행한다.
 4. 의도한 변경만 있는지 확인한 뒤 `terraform apply`를 실행한다.
 5. Firebase Admin SDK JSON을 Secret Manager secret version으로 등록한다.
-6. Terraform output `github_workload_identity_provider`를 GitHub Variable `GCP_WORKLOAD_IDENTITY_PROVIDER`에 등록한다.
-7. Terraform output `deployer_service_account_email`을 GitHub Variable `GCP_SERVICE_ACCOUNT`에 등록한다.
-8. 나머지 GitHub Variables를 등록한다.
-9. 기존 `GCP_SA_KEY` secret을 쓰고 있었다면 새 workflow 배포 성공 후 폐기한다.
-10. `feature/*` 브랜치에서 `main`으로 PR을 열어 CI check를 확인한다.
-11. `main` merge 후 Cloud Run 배포 workflow를 확인한다.
+6. DB password를 Secret Manager secret version으로 등록한다.
+7. Terraform output `github_workload_identity_provider`를 GitHub Variable `GCP_WORKLOAD_IDENTITY_PROVIDER`에 등록한다.
+8. Terraform output `deployer_service_account_email`을 GitHub Variable `GCP_SERVICE_ACCOUNT`에 등록한다.
+9. 나머지 GitHub Variables를 등록한다.
+10. 기존 `GCP_SA_KEY` secret을 쓰고 있었다면 새 workflow 배포 성공 후 폐기한다.
+11. `feature/*` 브랜치에서 `main`으로 PR을 열어 CI check를 확인한다.
+12. `main` merge 후 Cloud Run 배포 workflow를 확인한다.
 
 ## 실패 대응
 
@@ -118,4 +131,5 @@ Cloud Run runtime 계약:
 - GCP 인증 실패: `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT`, Terraform WIF provider의 repository/ref 조건을 확인한다.
 - Docker push 실패: Artifact Registry repository 이름, region, service account 권한을 확인한다.
 - Cloud Run deploy 실패: deployer service account의 `roles/run.admin`, runtime service account에 대한 `roles/iam.serviceAccountUser`, Artifact Registry reader 권한을 확인한다.
+- DB 연결 실패: `DB_PASSWORD` secret version 존재 여부, Cloud Run runtime service account의 secret accessor 권한, `DB_URL`/`DB_USER` 값을 확인한다.
 - Firebase 초기화 실패: Secret Manager secret version 존재 여부, runtime service account의 secret accessor 권한, `FIREBASE_CREDENTIALS_PATH` mount를 확인한다.
