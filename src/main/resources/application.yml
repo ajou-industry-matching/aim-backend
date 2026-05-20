@@ -30,6 +30,7 @@ spring:
       max-request-size: 50MB
 
 firebase:
+  enabled: ${FIREBASE_ENABLED:true}
   credentials:
     path: ${FIREBASE_CREDENTIALS_PATH:}
     json: ${FIREBASE_CREDENTIALS_JSON:}

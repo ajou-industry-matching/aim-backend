@@ -21,8 +21,14 @@
 - Java 17 설정
 - Gradle cache 설정
 - `./gradlew test bootJar --no-daemon`
+- GitHub Actions workflow 문법 검증 (`actionlint`)
+- PR용 더미 런타임 환경변수 계약 검증 (`DB_URL`, `DB_USER`, `DB_PASSWORD`, `DDL_AUTO`, `FIREBASE_STORAGE_BUCKET`)
+- Docker image build
+- MySQL 컨테이너와 함께 애플리케이션 컨테이너를 실행한 뒤 `/api/health` smoke test
 
-현재 저장소에는 별도 테스트 코드가 없으므로, 이 단계는 우선 컴파일과 Gradle test task 성공 여부를 보장한다. 테스트가 추가되면 같은 workflow가 회귀 테스트 gate 역할을 한다.
+현재 저장소에는 별도 테스트 코드가 없으므로, 이 단계는 컴파일과 Gradle test task 성공 여부를 먼저 보장한다. 추가로 Docker 이미지가 실제 컨테이너로 기동되고 `PORT=8080`에서 health check에 응답하는지 검증해 Cloud Run deploy 단계에서 발견되던 startup 실패를 PR 단계에서 최대한 앞당겨 잡는다.
+
+PR CI smoke test는 운영 DB나 Firebase 실계정을 사용하지 않는다. CI 안에서 MySQL 컨테이너를 임시로 띄우고, Firebase Admin SDK 초기화는 `FIREBASE_ENABLED=false`로 비활성화한다. GCP Workload Identity Federation, Cloud Run IAM, Artifact Registry push 권한처럼 실제 GCP 리소스 권한이 필요한 영역은 `Deploy to Cloud Run` workflow에서 검증한다.
 
 ### Deploy
 
