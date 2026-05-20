@@ -100,14 +100,14 @@ Cloud Run runtime 계약:
 
 ## Database Credential
 
-DB는 Oracle Cloud에 올라간 MySQL을 사용한다. 애플리케이션 이미지는 비밀번호 없이 다음 환경변수 계약으로 실행된다.
+운영 DB는 MySQL을 사용한다. 애플리케이션 이미지는 비밀번호 없이 다음 환경변수 계약으로 실행된다.
 
-- `DB_URL=jdbc:mysql://161.33.46.41:3306/aim?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8`
-- `DB_USER=aim_be`
-- `DB_PASSWORD=<Secret Manager latest version>`
+- `DB_URL=<JDBC URL>`
+- `DB_USER=<DB username>`
+- `DB_PASSWORD=<GitHub Actions Secret 또는 Secret Manager latest version>`
 - `DDL_AUTO=update`
 
-DB 비밀번호는 저장소와 Terraform 변수 파일에 넣지 않고 Secret Manager secret version으로만 등록한다.
+DB 접속 정보와 비밀번호는 저장소와 Terraform 변수 파일에 넣지 않는다. 현재 GitHub Actions 배포 workflow는 `DB_URL`, `DB_PASSWORD`를 GitHub Actions Secret으로 받고, `DB_USER`, `DDL_AUTO`를 GitHub Actions Variable로 받아 Cloud Run revision 환경변수에 주입한다.
 
 ## 최초 설정 순서
 
@@ -116,7 +116,7 @@ DB 비밀번호는 저장소와 Terraform 변수 파일에 넣지 않고 Secret 
 3. `terraform init`, `terraform fmt -check`, `terraform validate`, `terraform plan`을 실행한다.
 4. 의도한 변경만 있는지 확인한 뒤 `terraform apply`를 실행한다.
 5. Firebase Admin SDK JSON을 Secret Manager secret version으로 등록한다.
-6. DB password를 Secret Manager secret version으로 등록한다.
+6. DB 접속 정보와 DB password를 GitHub Actions Secret/Variable 또는 Secret Manager secret version으로 등록한다.
 7. Terraform output `github_workload_identity_provider`를 GitHub Variable `GCP_WORKLOAD_IDENTITY_PROVIDER`에 등록한다.
 8. Terraform output `deployer_service_account_email`을 GitHub Variable `GCP_SERVICE_ACCOUNT`에 등록한다.
 9. 나머지 GitHub Variables를 등록한다.

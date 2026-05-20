@@ -22,6 +22,11 @@ env:
   IMAGE_NAME: ${{ vars.IMAGE_NAME || 'aim-be' }}
   GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
   GCP_SERVICE_ACCOUNT: ${{ vars.GCP_SERVICE_ACCOUNT }}
+  DB_URL: ${{ secrets.DB_URL }}
+  DB_USER: ${{ vars.DB_USER || 'aim_be' }}
+  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+  DDL_AUTO: ${{ vars.DDL_AUTO || 'update' }}
+  FIREBASE_STORAGE_BUCKET: ${{ vars.FIREBASE_STORAGE_BUCKET || 'ajou-project-cafd9.firebasestorage.app' }}
 
 jobs:
   verify:
@@ -58,7 +63,7 @@ jobs:
       - name: Validate deployment configuration
         run: |
           missing=0
-          for name in GCP_PROJECT_ID GCP_REGION CLOUD_RUN_SERVICE ARTIFACT_REGISTRY_REPOSITORY IMAGE_NAME GCP_WORKLOAD_IDENTITY_PROVIDER GCP_SERVICE_ACCOUNT; do
+          for name in GCP_PROJECT_ID GCP_REGION CLOUD_RUN_SERVICE ARTIFACT_REGISTRY_REPOSITORY IMAGE_NAME GCP_WORKLOAD_IDENTITY_PROVIDER GCP_SERVICE_ACCOUNT DB_URL DB_USER DB_PASSWORD DDL_AUTO FIREBASE_STORAGE_BUCKET; do
             if [ -z "${!name}" ]; then
               echo "::error::${name} is required"
               missing=1
@@ -95,3 +100,9 @@ jobs:
           service: ${{ env.CLOUD_RUN_SERVICE }}
           image: ${{ env.IMAGE_URI }}
           region: ${{ env.GCP_REGION }}
+          env_vars: |-
+            DB_URL=${{ env.DB_URL }}
+            DB_USER=${{ env.DB_USER }}
+            DB_PASSWORD=${{ env.DB_PASSWORD }}
+            DDL_AUTO=${{ env.DDL_AUTO }}
+            FIREBASE_STORAGE_BUCKET=${{ env.FIREBASE_STORAGE_BUCKET }}
