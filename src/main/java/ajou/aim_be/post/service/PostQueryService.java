@@ -186,8 +186,7 @@ public class PostQueryService {
 
         Page<Post> page;
 
-        if (requester != null &&
-                (requester.getUserId().equals(targetUserId) || requester.isAdmin())) {
+        if (requester != null && requester.getUserId().equals(targetUserId)) {
 
             page = postRepository.findByUser_UserId(
                     targetUserId,

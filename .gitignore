@@ -46,6 +46,11 @@ src/main/resources/application-prod.yml
 src/main/resources/application-local.yml
 
 docker-compose.yml
+gradlew
+gradlew.bat
+gradle/
+
+src/test/
 
 # Google GitHub Actions temporary credentials
 gha-creds-*.json
