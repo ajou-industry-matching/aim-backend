@@ -17,6 +17,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
+      - name: Lint GitHub Actions workflows
+        uses: rhysd/actionlint@03d0035246f3e81f36aed592ffb4bebf33a03106 # v1.7.7
+
       - name: Set up Java
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
         with:
@@ -30,3 +33,33 @@ jobs:
 
       - name: Test and build
         run: ./gradlew test bootJar --no-daemon
+
+      - name: Validate runtime environment contract
+        env:
+          DB_URL: jdbc:mysql://aim-ci-mysql:3306/aim?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+          DB_USER: aim_be
+          DB_PASSWORD: ci_password
+          DDL_AUTO: none
+          FIREBASE_STORAGE_BUCKET: ci-smoke-test-bucket
+        run: bash .github/scripts/validate-runtime-env.sh
+
+      - name: Build Docker image
+        env:
+          IMAGE_NAME: aim-backend-ci
+        run: |
+          if grep -Eiq '^[[:space:]]*FROM[[:space:]].+[[:space:]]+AS[[:space:]]+runtime-prebuilt([[:space:]]|$)' Dockerfile; then
+            docker build --target runtime-prebuilt --tag "${IMAGE_NAME}" .
+          else
+            docker build --tag "${IMAGE_NAME}" .
+          fi
+
+      - name: Smoke test Docker container
+        env:
+          IMAGE_NAME: aim-backend-ci
+          PORT: "8080"
+          DB_URL: jdbc:mysql://aim-ci-mysql:3306/aim?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+          DB_USER: aim_be
+          DB_PASSWORD: ci_password
+          DDL_AUTO: none
+          FIREBASE_STORAGE_BUCKET: ci-smoke-test-bucket
+        run: bash .github/scripts/smoke-test-docker.sh

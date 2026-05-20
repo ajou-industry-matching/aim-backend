@@ -26,12 +26,15 @@ public class FirebaseAdminConfig {
     private final String credentialsPath;
     private final String credentialsJson;
     private final String storageBucket;
+    private final boolean firebaseEnabled;
 
     public FirebaseAdminConfig(
+            @Value("${firebase.enabled:true}") boolean firebaseEnabled,
             @Value("${firebase.credentials.path:}") String credentialsPath,
             @Value("${firebase.config.path:}") String legacyConfigPath,
             @Value("${firebase.credentials.json:}") String credentialsJson,
             @Value("${firebase.storage.bucket:ajou-project-cafd9.firebasestorage.app}") String storageBucket) {
+        this.firebaseEnabled = firebaseEnabled;
         this.credentialsPath = StringUtils.hasText(credentialsPath) ? credentialsPath : legacyConfigPath;
         this.credentialsJson = credentialsJson;
         this.storageBucket = storageBucket;
@@ -39,6 +42,10 @@ public class FirebaseAdminConfig {
 
     @PostConstruct
     public void init() {
+        if (!firebaseEnabled) {
+            return;
+        }
+
         if (!FirebaseApp.getApps().isEmpty()) {
             return;
         }
