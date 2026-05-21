@@ -1,6 +1,9 @@
 name: CI
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
@@ -46,12 +49,7 @@ jobs:
       - name: Build Docker image
         env:
           IMAGE_NAME: aim-backend-ci
-        run: |
-          if grep -Eiq '^[[:space:]]*FROM[[:space:]].+[[:space:]]+AS[[:space:]]+runtime-prebuilt([[:space:]]|$)' Dockerfile; then
-            docker build --target runtime-prebuilt --tag "${IMAGE_NAME}" .
-          else
-            docker build --tag "${IMAGE_NAME}" .
-          fi
+        run: docker build --target runtime --tag "${IMAGE_NAME}" .
 
       - name: Smoke test Docker container
         env:

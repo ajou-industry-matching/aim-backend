@@ -6,7 +6,7 @@
 - 개발 브랜치: `feature/*`
 - 병합 흐름: `feature/*`에서 `main`으로 Pull Request 생성
 - PR 하단 Checks 영역에 `CI / Gradle test and build` 결과가 표시된다.
-- `main`에 merge되면 `Deploy to Cloud Run` workflow가 실행된다.
+- `main`에 merge되면 `CI`와 `Deploy to Cloud Run` workflow가 각각 실행된다.
 
 ## GitHub Actions
 
@@ -14,7 +14,7 @@
 
 파일: `.github/workflows/ci.yml`
 
-`pull_request`가 `main`을 대상으로 열리거나 갱신될 때 실행된다.
+`pull_request`가 `main`을 대상으로 열리거나 갱신될 때, 그리고 `main` push가 발생할 때 실행된다.
 
 검증 내용:
 
@@ -28,7 +28,7 @@
 
 현재 저장소에는 별도 테스트 코드가 없으므로, 이 단계는 컴파일과 Gradle test task 성공 여부를 먼저 보장한다. 추가로 Docker 이미지가 실제 컨테이너로 기동되고 `PORT=8080`에서 health check에 응답하는지 검증해 Cloud Run deploy 단계에서 발견되던 startup 실패를 PR 단계에서 최대한 앞당겨 잡는다.
 
-PR CI smoke test는 운영 DB나 Firebase 실계정을 사용하지 않는다. CI 안에서 MySQL 컨테이너를 임시로 띄우고, Firebase Admin SDK 초기화는 `FIREBASE_ENABLED=false`로 비활성화한다. GCP Workload Identity Federation, Cloud Run IAM, Artifact Registry push 권한처럼 실제 GCP 리소스 권한이 필요한 영역은 `Deploy to Cloud Run` workflow에서 검증한다.
+CI smoke test는 운영 DB나 Firebase 실계정을 사용하지 않는다. CI 안에서 MySQL 컨테이너를 임시로 띄우고, Firebase Admin SDK 초기화는 `FIREBASE_ENABLED=false`로 비활성화한다. GCP Workload Identity Federation, Cloud Run IAM, Artifact Registry push 권한처럼 실제 GCP 리소스 권한이 필요한 영역은 `Deploy to Cloud Run` workflow에서 검증한다.
 
 ### Deploy
 
@@ -38,17 +38,17 @@ PR CI smoke test는 운영 DB나 Firebase 실계정을 사용하지 않는다. C
 
 job 구조:
 
-- `verify`: CI와 같은 `./gradlew test bootJar --no-daemon` 실행
-- `deploy`: `needs: verify`로 연결되어 검증 실패 시 실행되지 않음
+- `deploy`: 배포 설정 검증, GCP 인증, Docker image build/push, Cloud Run deploy 실행
 
 배포 내용:
 
 - GitHub OIDC와 Google Workload Identity Federation으로 GCP 인증
 - Artifact Registry Docker auth 설정
-- `verify` job에서 생성한 bootJar artifact 재사용
 - Docker Buildx cache 기반 Docker image build
 - Artifact Registry push
 - Cloud Run revision 배포
+
+`Deploy to Cloud Run` workflow는 더 이상 Gradle test/build 검증을 별도 job으로 반복하지 않는다. 코드 검증, workflow lint, Docker smoke test는 `CI` workflow가 담당하고, 배포 workflow는 Cloud Run 배포에 필요한 런타임 설정과 GCP 권한 영역에 집중한다. 현재 구조에서는 `main` push 시 `CI`와 `Deploy to Cloud Run`이 독립적으로 실행된다. 배포를 CI 성공 이후로 강제해야 한다면 branch protection 또는 `workflow_run` 기반 순차 실행을 별도 이슈로 검토한다.
 
 이미지 태그:
 
@@ -118,12 +118,17 @@ DB 접속 정보와 비밀번호는 저장소와 Terraform 변수 파일에 넣�
 
 ## Image Build Optimization
 
-Dockerfile은 로컬 빌드가 가능한 멀티 스테이지 구조를 유지한다. 기본 `runtime` target은 Docker build 내부에서 Gradle `bootJar`를 실행하고, GitHub Actions 배포는 `verify` job의 `bootJar` 결과물을 artifact로 받아 `runtime-prebuilt` target을 빌드한다.
+Dockerfile은 로컬 빌드가 가능한 멀티 스테이지 구조를 유지한다. 기본 `runtime` target은 Docker build 내부에서 Gradle `bootJar`를 실행하고, `runtime-prebuilt` target은 이미 생성된 `build/libs/aim-be.jar`를 이미지에 복사한다.
 
-배포 workflow의 이미지 최적화 계약:
+CI workflow의 이미지 검증 계약:
 
-- `verify`: `./gradlew test bootJar --no-daemon` 실행 후 `build/libs/aim-be.jar` artifact 업로드
-- `deploy`: artifact 다운로드 후 Docker 내부 Gradle 빌드 없이 `runtime-prebuilt` target 빌드
+- `./gradlew test bootJar --no-daemon` 실행
+- 배포 workflow와 같은 `runtime` target으로 Docker image build
+- CI 전용 MySQL 컨테이너와 함께 애플리케이션 컨테이너 smoke test
+
+배포 workflow의 이미지 빌드 계약:
+
+- 별도 Gradle verify job 없이 Docker Buildx로 `runtime` target build/push
 - Docker Buildx `type=gha` cache로 레이어 캐시 재사용
 - 최종 런타임 이미지는 non-root distroless Java 17 기반으로 실행
 
@@ -145,7 +150,7 @@ Dockerfile은 로컬 빌드가 가능한 멀티 스테이지 구조를 유지한
 ## 실패 대응
 
 - PR CI 실패: PR 하단 Checks에서 실패 job을 열고 Gradle compile/test 오류를 확인한다.
-- deploy `verify` 실패: image build/push/deploy는 실행되지 않는다.
+- deploy 설정 검증 실패: 필수 GitHub Variables/Secrets 값을 확인한다.
 - GCP 인증 실패: `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT`, Terraform WIF provider의 repository/ref 조건을 확인한다.
 - Docker push 실패: Artifact Registry repository 이름, region, service account 권한을 확인한다.
 - Cloud Run deploy 실패: deployer service account의 `roles/run.admin`, runtime service account에 대한 `roles/iam.serviceAccountUser`, Artifact Registry reader 권한을 확인한다.
