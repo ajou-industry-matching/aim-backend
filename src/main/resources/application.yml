@@ -17,7 +17,7 @@ spring:
     database: mysql
     open-in-view: false
     hibernate:
-      ddl-auto: ${DDL_AUTO:update}
+      ddl-auto: ${DDL_AUTO:validate}
     properties:
       hibernate:
         format_sql: true

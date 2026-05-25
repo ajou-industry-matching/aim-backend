@@ -18,4 +18,15 @@ for name in "${required_vars[@]}"; do
   fi
 done
 
+if [ -n "${DDL_AUTO:-}" ]; then
+  case "${DDL_AUTO}" in
+    validate|none)
+      ;;
+    *)
+      echo "::error::DDL_AUTO must be validate or none for Cloud Run deployments"
+      missing=1
+      ;;
+  esac
+fi
+
 exit "${missing}"

@@ -30,6 +30,11 @@ resource "google_cloud_run_v2_service" "app" {
       }
 
       env {
+        name  = "SPRING_PROFILES_ACTIVE"
+        value = var.spring_profiles_active
+      }
+
+      env {
         name  = "FIREBASE_CREDENTIALS_PATH"
         value = local.firebase_credentials_path
       }
