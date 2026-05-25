@@ -1,0 +1,5 @@
+spring:
+  jpa:
+    hibernate:
+      # Keep production schema management read-only. Do not store secrets in this file.
+      ddl-auto: ${DDL_AUTO:validate}

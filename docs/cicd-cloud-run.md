@@ -112,9 +112,10 @@ Cloud Run runtime 계약:
 - `DB_URL=<JDBC URL>`
 - `DB_USER=<DB username>`
 - `DB_PASSWORD=<GitHub Actions Secret 또는 Secret Manager latest version>`
-- `DDL_AUTO=update`
+- `SPRING_PROFILES_ACTIVE=prod`
+- `DDL_AUTO=validate`
 
-DB 접속 정보와 비밀번호는 저장소와 Terraform 변수 파일에 넣지 않는다. 현재 GitHub Actions 배포 workflow는 `DB_URL`, `DB_PASSWORD`를 GitHub Actions Secret으로 받고, `DB_USER`, `DDL_AUTO`를 GitHub Actions Variable로 받아 Cloud Run revision 환경변수에 주입한다.
+DB 접속 정보와 비밀번호는 저장소와 Terraform 변수 파일에 넣지 않는다. 현재 GitHub Actions 배포 workflow는 `DB_URL`, `DB_PASSWORD`를 GitHub Actions Secret으로 받고, `DB_USER`, `DDL_AUTO`를 GitHub Actions Variable로 받아 Cloud Run revision 환경변수에 주입한다. 운영 환경에서는 Hibernate가 스키마를 자동 생성하거나 삭제하지 않도록 `DDL_AUTO` 기본값을 `validate`로 두고, Cloud Run 배포에서는 `validate` 또는 `none`만 허용한다.
 
 ## Image Build Optimization
 

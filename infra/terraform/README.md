@@ -73,7 +73,10 @@ Cloud Run에는 다음 계약으로 주입된다.
 - env: `DB_URL=<JDBC URL>`
 - env: `DB_USER=aim_be`
 - env: `DB_PASSWORD=<Secret Manager latest version>`
-- env: `DDL_AUTO=update`
+- env: `SPRING_PROFILES_ACTIVE=prod`
+- env: `DDL_AUTO=validate`
+
+`DDL_AUTO`는 운영 DB 스키마 자동 삭제/생성을 막기 위해 `validate` 또는 `none`만 허용한다.
 
 ## 실행 예시
 

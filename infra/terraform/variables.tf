@@ -98,10 +98,21 @@ variable "db_user" {
   default     = "aim_be"
 }
 
+variable "spring_profiles_active" {
+  description = "Spring profile activated in the Cloud Run runtime."
+  type        = string
+  default     = "prod"
+}
+
 variable "ddl_auto" {
   description = "Hibernate ddl-auto mode."
   type        = string
-  default     = "update"
+  default     = "validate"
+
+  validation {
+    condition     = contains(["validate", "none"], var.ddl_auto)
+    error_message = "ddl_auto must be validate or none for Cloud Run deployments."
+  }
 }
 
 variable "container_port" {
@@ -148,9 +159,9 @@ variable "environment_variables" {
   validation {
     condition = length([
       for key in keys(var.environment_variables) : key
-      if contains(["DB_PASSWORD", "DB_URL", "DB_USER", "DDL_AUTO", "FIREBASE_CREDENTIALS_PATH", "FIREBASE_STORAGE_BUCKET"], key)
+      if contains(["DB_PASSWORD", "DB_URL", "DB_USER", "DDL_AUTO", "SPRING_PROFILES_ACTIVE", "FIREBASE_CREDENTIALS_PATH", "FIREBASE_STORAGE_BUCKET"], key)
     ]) == 0
-    error_message = "environment_variables must not contain DB_PASSWORD, DB_URL, DB_USER, DDL_AUTO, FIREBASE_CREDENTIALS_PATH, or FIREBASE_STORAGE_BUCKET."
+    error_message = "environment_variables must not contain DB_PASSWORD, DB_URL, DB_USER, DDL_AUTO, SPRING_PROFILES_ACTIVE, FIREBASE_CREDENTIALS_PATH, or FIREBASE_STORAGE_BUCKET."
   }
 }
 
