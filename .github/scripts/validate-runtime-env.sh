@@ -6,6 +6,7 @@ required_vars=(
   DB_USER
   DB_PASSWORD
   DDL_AUTO
+  SPRING_JPA_HIBERNATE_DDL_AUTO
   FIREBASE_STORAGE_BUCKET
 )
 
@@ -24,6 +25,17 @@ if [ -n "${DDL_AUTO:-}" ]; then
       ;;
     *)
       echo "::error::DDL_AUTO must be validate or none for Cloud Run deployments"
+      missing=1
+      ;;
+  esac
+fi
+
+if [ -n "${SPRING_JPA_HIBERNATE_DDL_AUTO:-}" ]; then
+  case "${SPRING_JPA_HIBERNATE_DDL_AUTO}" in
+    validate|none)
+      ;;
+    *)
+      echo "::error::SPRING_JPA_HIBERNATE_DDL_AUTO must be validate or none for Cloud Run deployments"
       missing=1
       ;;
   esac

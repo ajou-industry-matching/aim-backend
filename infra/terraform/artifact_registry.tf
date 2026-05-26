@@ -1,6 +1,6 @@
 resource "google_artifact_registry_repository" "app" {
   project       = var.project_id
-  location      = var.region
+  location      = var.artifact_registry_region
   repository_id = var.repository_id
   description   = "Docker images for ${var.service_name}."
   format        = "DOCKER"

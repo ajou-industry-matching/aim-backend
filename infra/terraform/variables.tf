@@ -4,7 +4,19 @@ variable "project_id" {
 }
 
 variable "region" {
-  description = "Google Cloud region for Artifact Registry and Cloud Run."
+  description = "Default Google Cloud region kept for backwards-compatible Terraform input."
+  type        = string
+  default     = "us-central1"
+}
+
+variable "cloud_run_region" {
+  description = "Google Cloud region for the production Cloud Run service."
+  type        = string
+  default     = "us-central1"
+}
+
+variable "artifact_registry_region" {
+  description = "Google Cloud region for the Artifact Registry Docker repository."
   type        = string
   default     = "asia-northeast3"
 }
@@ -18,7 +30,7 @@ variable "repository_id" {
 variable "service_name" {
   description = "Cloud Run service name."
   type        = string
-  default     = "aim-be"
+  default     = "aim-be-prod"
 }
 
 variable "image_name" {
@@ -159,9 +171,9 @@ variable "environment_variables" {
   validation {
     condition = length([
       for key in keys(var.environment_variables) : key
-      if contains(["DB_PASSWORD", "DB_URL", "DB_USER", "DDL_AUTO", "SPRING_PROFILES_ACTIVE", "FIREBASE_CREDENTIALS_PATH", "FIREBASE_STORAGE_BUCKET"], key)
+      if contains(["DB_PASSWORD", "DB_URL", "DB_USER", "DDL_AUTO", "SPRING_JPA_HIBERNATE_DDL_AUTO", "SPRING_PROFILES_ACTIVE", "FIREBASE_CREDENTIALS_PATH", "FIREBASE_STORAGE_BUCKET"], key)
     ]) == 0
-    error_message = "environment_variables must not contain DB_PASSWORD, DB_URL, DB_USER, DDL_AUTO, SPRING_PROFILES_ACTIVE, FIREBASE_CREDENTIALS_PATH, or FIREBASE_STORAGE_BUCKET."
+    error_message = "environment_variables must not contain DB_PASSWORD, DB_URL, DB_USER, DDL_AUTO, SPRING_JPA_HIBERNATE_DDL_AUTO, SPRING_PROFILES_ACTIVE, FIREBASE_CREDENTIALS_PATH, or FIREBASE_STORAGE_BUCKET."
   }
 }
 

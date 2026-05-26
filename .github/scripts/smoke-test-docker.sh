@@ -60,6 +60,7 @@ docker run \
   --env DB_USER="${DB_USER}" \
   --env DB_PASSWORD="${DB_PASSWORD}" \
   --env DDL_AUTO="${DDL_AUTO}" \
+  --env SPRING_JPA_HIBERNATE_DDL_AUTO="${SPRING_JPA_HIBERNATE_DDL_AUTO}" \
   --env FIREBASE_ENABLED=false \
   --env FIREBASE_STORAGE_BUCKET="${FIREBASE_STORAGE_BUCKET}" \
   "${IMAGE_NAME}" >/dev/null
