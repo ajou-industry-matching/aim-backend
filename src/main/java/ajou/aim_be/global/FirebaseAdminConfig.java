@@ -13,9 +13,9 @@ import jakarta.annotation.PostConstruct;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Base64;
 
 @Configuration
 public class FirebaseAdminConfig {
@@ -70,7 +70,8 @@ public class FirebaseAdminConfig {
 
     private InputStream openCredentialsStream() throws IOException {
         if (StringUtils.hasText(credentialsJson)) {
-            return new ByteArrayInputStream(credentialsJson.getBytes(StandardCharsets.UTF_8));
+            byte[] decoded = Base64.getDecoder().decode(credentialsJson.trim());
+            return new ByteArrayInputStream(decoded);
         }
 
         if (StringUtils.hasText(credentialsPath)) {
