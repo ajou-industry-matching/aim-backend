@@ -30,6 +30,7 @@ env:
   DDL_AUTO: ${{ vars.DDL_AUTO || 'validate' }}
   SPRING_JPA_HIBERNATE_DDL_AUTO: ${{ vars.DDL_AUTO || 'validate' }}
   FIREBASE_STORAGE_BUCKET: ${{ vars.FIREBASE_STORAGE_BUCKET || 'ajou-project-cafd9.firebasestorage.app' }}
+  FIREBASE_CREDENTIALS_JSON: ${{ secrets.FIREBASE_CREDENTIALS_JSON }}
 
 jobs:
   deploy:
@@ -86,3 +87,4 @@ jobs:
             DDL_AUTO=${{ env.DDL_AUTO }}
             SPRING_JPA_HIBERNATE_DDL_AUTO=${{ env.SPRING_JPA_HIBERNATE_DDL_AUTO }}
             FIREBASE_STORAGE_BUCKET=${{ env.FIREBASE_STORAGE_BUCKET }}
+            FIREBASE_CREDENTIALS_JSON=${{ env.FIREBASE_CREDENTIALS_JSON }}
