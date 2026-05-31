@@ -16,10 +16,11 @@ concurrency:
 
 env:
   GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
-  GCP_REGION: ${{ vars.GCP_REGION || 'asia-northeast3' }}
-  CLOUD_RUN_SERVICE: ${{ vars.CLOUD_RUN_SERVICE || 'aim-be' }}
-  ARTIFACT_REGISTRY_REPOSITORY: ${{ vars.ARTIFACT_REGISTRY_REPOSITORY || 'app-repo' }}
-  IMAGE_NAME: ${{ vars.IMAGE_NAME || 'aim-be' }}
+  CLOUD_RUN_REGION: us-central1
+  CLOUD_RUN_SERVICE: aim-be-prod
+  ARTIFACT_REGISTRY_REGION: asia-northeast3
+  ARTIFACT_REGISTRY_REPOSITORY: app-repo
+  IMAGE_NAME: aim-be
   GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
   GCP_SERVICE_ACCOUNT: ${{ vars.GCP_SERVICE_ACCOUNT }}
   SPRING_PROFILES_ACTIVE: prod
@@ -27,6 +28,7 @@ env:
   DB_USER: ${{ vars.DB_USER || 'aim_be' }}
   DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
   DDL_AUTO: ${{ vars.DDL_AUTO || 'validate' }}
+  SPRING_JPA_HIBERNATE_DDL_AUTO: ${{ vars.DDL_AUTO || 'validate' }}
   FIREBASE_STORAGE_BUCKET: ${{ vars.FIREBASE_STORAGE_BUCKET || 'ajou-project-cafd9.firebasestorage.app' }}
 
 jobs:
@@ -54,7 +56,7 @@ jobs:
           project_id: ${{ env.GCP_PROJECT_ID }}
 
       - name: Configure Artifact Registry Docker auth
-        run: gcloud auth configure-docker "${GCP_REGION}-docker.pkg.dev" --quiet
+        run: gcloud auth configure-docker "${ARTIFACT_REGISTRY_REGION}-docker.pkg.dev" --quiet
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
@@ -65,7 +67,7 @@ jobs:
           context: .
           target: runtime
           push: true
-          tags: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          tags: ${{ env.ARTIFACT_REGISTRY_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -74,12 +76,13 @@ jobs:
         uses: google-github-actions/deploy-cloudrun@2028e2d7d30a78c6910e0632e48dd561b064884d # v3
         with:
           service: ${{ env.CLOUD_RUN_SERVICE }}
-          image: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          region: ${{ env.GCP_REGION }}
+          image: ${{ env.ARTIFACT_REGISTRY_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          region: ${{ env.CLOUD_RUN_REGION }}
           env_vars: |-
             SPRING_PROFILES_ACTIVE=${{ env.SPRING_PROFILES_ACTIVE }}
             DB_URL=${{ env.DB_URL }}
             DB_USER=${{ env.DB_USER }}
             DB_PASSWORD=${{ env.DB_PASSWORD }}
             DDL_AUTO=${{ env.DDL_AUTO }}
+            SPRING_JPA_HIBERNATE_DDL_AUTO=${{ env.SPRING_JPA_HIBERNATE_DDL_AUTO }}
             FIREBASE_STORAGE_BUCKET=${{ env.FIREBASE_STORAGE_BUCKET }}

@@ -22,7 +22,7 @@
 - Gradle cache 설정
 - `./gradlew test bootJar --no-daemon`
 - GitHub Actions workflow 문법 검증 (`actionlint`)
-- PR용 더미 런타임 환경변수 계약 검증 (`DB_URL`, `DB_USER`, `DB_PASSWORD`, `DDL_AUTO`, `FIREBASE_STORAGE_BUCKET`)
+- PR용 더미 런타임 환경변수 계약 검증 (`DB_URL`, `DB_USER`, `DB_PASSWORD`, `DDL_AUTO`, `SPRING_JPA_HIBERNATE_DDL_AUTO`, `FIREBASE_STORAGE_BUCKET`)
 - Docker image build
 - MySQL 컨테이너와 함께 애플리케이션 컨테이너를 실행한 뒤 `/api/health` smoke test
 
@@ -46,15 +46,17 @@ job 구조:
 - Artifact Registry Docker auth 설정
 - Docker Buildx cache 기반 Docker image build
 - Artifact Registry push
-- Cloud Run revision 배포
+- 운영 Cloud Run service `aim-be-prod` revision 배포
 
 `Deploy to Cloud Run` workflow는 더 이상 Gradle test/build 검증을 별도 job으로 반복하지 않는다. 코드 검증, workflow lint, Docker smoke test는 `CI` workflow가 담당하고, 배포 workflow는 Cloud Run 배포에 필요한 런타임 설정과 GCP 권한 영역에 집중한다. 현재 구조에서는 `main` push 시 `CI`와 `Deploy to Cloud Run`이 독립적으로 실행된다. 배포를 CI 성공 이후로 강제해야 한다면 branch protection 또는 `workflow_run` 기반 순차 실행을 별도 이슈로 검토한다.
 
 이미지 태그:
 
 ```text
-<REGION>-docker.pkg.dev/<PROJECT_ID>/<REPOSITORY>/<IMAGE_NAME>:<GITHUB_SHA>
+<ARTIFACT_REGISTRY_REGION>-docker.pkg.dev/<PROJECT_ID>/<REPOSITORY>/<IMAGE_NAME>:<GITHUB_SHA>
 ```
+
+현재 운영 프론트의 Firebase Hosting rewrite는 `/api/**` 요청을 `aim-be-prod`의 `us-central1` service로 전달한다. 따라서 백엔드 배포 workflow도 실제 운영 API인 `aim-be-prod`를 배포 대상으로 고정한다. 기존 `aim-be` service는 운영 프론트가 바라보지 않는 레거시 service로 취급한다.
 
 ## GitHub Variables
 
@@ -63,12 +65,21 @@ Repository Settings > Secrets and variables > Actions > Variables에 등록한�
 | 이름 | 예시 | 설명 |
 | --- | --- | --- |
 | `GCP_PROJECT_ID` | `my-project` | Google Cloud project ID |
-| `GCP_REGION` | `asia-northeast3` | Cloud Run 및 Artifact Registry region |
-| `CLOUD_RUN_SERVICE` | `aim-be` | Cloud Run service name |
-| `ARTIFACT_REGISTRY_REPOSITORY` | `app-repo` | Artifact Registry repository ID |
-| `IMAGE_NAME` | `aim-be` | Docker image name |
 | `GCP_WORKLOAD_IDENTITY_PROVIDER` | `projects/123456789/locations/global/workloadIdentityPools/aim-backend-github/providers/github` | Terraform output `github_workload_identity_provider` |
 | `GCP_SERVICE_ACCOUNT` | `github-actions-deployer@my-project.iam.gserviceaccount.com` | Terraform output `deployer_service_account_email` |
+| `DB_USER` | `aim_be` | DB username. 미등록 시 workflow 기본값 사용 |
+| `DDL_AUTO` | `validate` | Hibernate ddl-auto mode. `validate` 또는 `none`만 허용 |
+| `FIREBASE_STORAGE_BUCKET` | `ajou-project-cafd9.firebasestorage.app` | Firebase Storage bucket. 미등록 시 workflow 기본값 사용 |
+
+운영 배포 대상은 workflow에 명시한다.
+
+| 이름 | 값 | 설명 |
+| --- | --- | --- |
+| `CLOUD_RUN_REGION` | `us-central1` | 실제 운영 Cloud Run region |
+| `CLOUD_RUN_SERVICE` | `aim-be-prod` | 실제 운영 Cloud Run service |
+| `ARTIFACT_REGISTRY_REGION` | `asia-northeast3` | 기존 `app-repo`가 있는 Artifact Registry region |
+| `ARTIFACT_REGISTRY_REPOSITORY` | `app-repo` | Artifact Registry repository ID |
+| `IMAGE_NAME` | `aim-be` | Docker image name |
 
 ## GitHub Secrets
 
@@ -114,8 +125,9 @@ Cloud Run runtime 계약:
 - `DB_PASSWORD=<GitHub Actions Secret 또는 Secret Manager latest version>`
 - `SPRING_PROFILES_ACTIVE=prod`
 - `DDL_AUTO=validate`
+- `SPRING_JPA_HIBERNATE_DDL_AUTO=validate`
 
-DB 접속 정보와 비밀번호는 저장소와 Terraform 변수 파일에 넣지 않는다. 현재 GitHub Actions 배포 workflow는 `DB_URL`, `DB_PASSWORD`를 GitHub Actions Secret으로 받고, `DB_USER`, `DDL_AUTO`를 GitHub Actions Variable로 받아 Cloud Run revision 환경변수에 주입한다. 운영 환경에서는 Hibernate가 스키마를 자동 생성하거나 삭제하지 않도록 `DDL_AUTO` 기본값을 `validate`로 두고, Cloud Run 배포에서는 `validate` 또는 `none`만 허용한다.
+DB 접속 정보와 비밀번호는 저장소와 Terraform 변수 파일에 넣지 않는다. 현재 GitHub Actions 배포 workflow는 `DB_URL`, `DB_PASSWORD`를 GitHub Actions Secret으로 받고, `DB_USER`, `DDL_AUTO`를 GitHub Actions Variable로 받아 Cloud Run revision 환경변수에 주입한다. 운영 환경에서는 Hibernate가 스키마를 자동 생성하거나 삭제하지 않도록 `DDL_AUTO`와 `SPRING_JPA_HIBERNATE_DDL_AUTO` 기본값을 `validate`로 두고, Cloud Run 배포에서는 `validate` 또는 `none`만 허용한다.
 
 ## Image Build Optimization
 
@@ -153,7 +165,7 @@ CI workflow의 이미지 검증 계약:
 - PR CI 실패: PR 하단 Checks에서 실패 job을 열고 Gradle compile/test 오류를 확인한다.
 - deploy 설정 검증 실패: 필수 GitHub Variables/Secrets 값을 확인한다.
 - GCP 인증 실패: `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT`, Terraform WIF provider의 repository/ref 조건을 확인한다.
-- Docker push 실패: Artifact Registry repository 이름, region, service account 권한을 확인한다.
-- Cloud Run deploy 실패: deployer service account의 `roles/run.admin`, runtime service account에 대한 `roles/iam.serviceAccountUser`, Artifact Registry reader 권한을 확인한다.
+- Docker push 실패: Artifact Registry repository 이름, `ARTIFACT_REGISTRY_REGION`, service account 권한을 확인한다.
+- Cloud Run deploy 실패: `CLOUD_RUN_REGION`, `CLOUD_RUN_SERVICE`, deployer service account의 `roles/run.admin`, runtime service account에 대한 `roles/iam.serviceAccountUser`, Artifact Registry reader 권한을 확인한다.
 - DB 연결 실패: `DB_PASSWORD` secret version 존재 여부, Cloud Run runtime service account의 secret accessor 권한, `DB_URL`/`DB_USER` 값을 확인한다.
 - Firebase 초기화 실패: Secret Manager secret version 존재 여부, runtime service account의 secret accessor 권한, `FIREBASE_CREDENTIALS_PATH` mount를 확인한다.

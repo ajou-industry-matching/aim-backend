@@ -9,7 +9,7 @@ locals {
 resource "google_cloud_run_v2_service" "app" {
   project             = var.project_id
   name                = var.service_name
-  location            = var.region
+  location            = var.cloud_run_region
   ingress             = var.ingress
   labels              = var.labels
   deletion_protection = var.deletion_protection
@@ -56,6 +56,11 @@ resource "google_cloud_run_v2_service" "app" {
 
       env {
         name  = "DDL_AUTO"
+        value = var.ddl_auto
+      }
+
+      env {
+        name  = "SPRING_JPA_HIBERNATE_DDL_AUTO"
         value = var.ddl_auto
       }
 

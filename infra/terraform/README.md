@@ -75,8 +75,9 @@ Cloud Run에는 다음 계약으로 주입된다.
 - env: `DB_PASSWORD=<Secret Manager latest version>`
 - env: `SPRING_PROFILES_ACTIVE=prod`
 - env: `DDL_AUTO=validate`
+- env: `SPRING_JPA_HIBERNATE_DDL_AUTO=validate`
 
-`DDL_AUTO`는 운영 DB 스키마 자동 삭제/생성을 막기 위해 `validate` 또는 `none`만 허용한다.
+`DDL_AUTO`와 `SPRING_JPA_HIBERNATE_DDL_AUTO`는 운영 DB 스키마 자동 삭제/생성을 막기 위해 `validate` 또는 `none`만 허용한다.
 
 ## 실행 예시
 
@@ -86,7 +87,10 @@ terraform fmt -check
 terraform validate
 terraform plan \
   -var="project_id=<PROJECT_ID>" \
-  -var="bootstrap_image=<REGION>-docker.pkg.dev/<PROJECT_ID>/<REPOSITORY>/aim-backend:bootstrap"
+  -var="cloud_run_region=us-central1" \
+  -var="artifact_registry_region=asia-northeast3" \
+  -var="service_name=aim-be-prod" \
+  -var="bootstrap_image=<ARTIFACT_REGISTRY_REGION>-docker.pkg.dev/<PROJECT_ID>/<REPOSITORY>/aim-backend:bootstrap"
 ```
 
 기존 Cloud Run 서비스가 이미 있다면 새로 만들기 전에 import를 먼저 한다.
@@ -94,7 +98,7 @@ terraform plan \
 ```bash
 terraform import \
   'google_cloud_run_v2_service.app' \
-  'projects/<PROJECT_ID>/locations/<REGION>/services/<SERVICE_NAME>'
+  'projects/<PROJECT_ID>/locations/us-central1/services/aim-be-prod'
 ```
 
 import 후 `terraform plan`에서 의도하지 않은 service account, secret, env, ingress 변경이 없는지 확인한다.
