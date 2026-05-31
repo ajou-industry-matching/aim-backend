@@ -47,8 +47,6 @@ public class AuthController {
                 .role(user.getUserRole())
                 .status(user.getUserStatus())
                 .adminRole(user.getAdminRole())
-                .name(user.getName())
-                .department(user.getDepartment())
                 .build();
 
         return ResponseEntity.ok(response);
