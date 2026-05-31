@@ -23,6 +23,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+import static org.springframework.data.domain.Sort.Direction.DESC;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/posts")
@@ -36,9 +38,10 @@ public class PostController {
     @GetMapping("/my")
     public PageResponse<PostListResponse> getMyPosts(
             @AuthenticationPrincipal User user,
-            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+            @RequestParam(defaultValue = "LATEST") PostSortType sortType,
+            @PageableDefault( size = 10) Pageable pageable) {
 
-        return postQueryService.getMyPosts(user, pageable);
+        return postQueryService.getMyPosts(user, pageable, sortType);
     }
 
     @Operation(summary = "게시판별 게시글 목록 조회", description = "게시판 타입별 게시글 목록을 페이지 단위로 조회합니다.")
@@ -46,11 +49,13 @@ public class PostController {
     public PageResponse<PostListResponse> getPosts(
             @Parameter(description = "게시판 타입", example = "PORTFOLIO")
             @PathVariable BoardType boardType,
-            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            @Parameter(description = "정렬 기준", example = "LATEST")
+            @RequestParam(defaultValue = "LATEST") PostSortType sortType,
+            @PageableDefault(size = 10) Pageable pageable,
             @AuthenticationPrincipal User user
     ) {
 
-        return postQueryService.getPosts(boardType, pageable, user);
+        return postQueryService.getPosts(boardType, pageable, user, sortType);
     }
 
     @Operation(summary = "게시글 상세 조회", description = "특정 게시글의 상세 내용을 조회합니다.")
@@ -123,7 +128,7 @@ public class PostController {
     @GetMapping("/liked")
     public PageResponse<PostListResponse> getLikedPosts(
             @AuthenticationPrincipal User user,
-            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+            @PageableDefault(sort = "createdAt", direction = DESC) Pageable pageable
     ) {
         return postQueryService.getLikedPosts(user, pageable);
     }
@@ -134,9 +139,11 @@ public class PostController {
             @Parameter(description = "사용자 ID", example = "10")
             @PathVariable Long userId,
             @AuthenticationPrincipal User user,
-            Pageable pageable
+            @Parameter(description = "정렬 기준", example = "LATEST")
+            @RequestParam(defaultValue = "LATEST") PostSortType sortType,
+            @PageableDefault(size = 10) Pageable pageable
     ) {
-        return postQueryService.getUserPosts(userId, user, pageable);
+        return postQueryService.getUserPosts(userId, user, pageable, sortType);
     }
 
     @Operation(summary = "게시글 검색", description = "게시판 타입과 검색어로 게시글을 검색합니다.")
@@ -146,10 +153,12 @@ public class PostController {
             @RequestParam BoardType boardType,
             @Parameter(description = "검색 키워드", example = "백엔드")
             @RequestParam(required = false) String keyword,
+            @Parameter(description = "정렬 기준", example = "LATEST")
+            @RequestParam(defaultValue = "LATEST") PostSortType sortType,
             @AuthenticationPrincipal User user,
-            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+            @PageableDefault(size = 10) Pageable pageable
     ) {
-        return postQueryService.searchPosts(boardType, keyword, user, pageable);
+        return postQueryService.searchPosts(boardType, keyword, user, pageable, sortType);
     }
 
     @Operation(summary = "최근 게시글 조회", description = "최근 게시글 4개를 조회합니다.")

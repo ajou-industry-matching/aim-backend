@@ -34,21 +34,23 @@ public class PostQueryService {
     private final PostKeywordRepository postKeywordRepository;
 
     @Transactional(readOnly = true)
-    public PageResponse<PostListResponse> getMyPosts(User user, Pageable pageable) {
+    public PageResponse<PostListResponse> getMyPosts(User user, Pageable pageable, PostSortType sortType) {
 
         if (user == null) {
             throw new CustomException(ErrorCode.UNAUTHORIZED);
         }
 
+        Pageable sortedPageable = sortType.applyTo(pageable);
+
         Page<Post> page = postRepository.findByUser_UserId(
                 user.getUserId(),
-                pageable
+                sortedPageable
         );
 
         List<Post> posts = page.getContent();
 
         if (posts.isEmpty()) {
-            return PageResponse.from(Page.empty());
+            return PageResponse.empty(page);
         }
 
         List<Long> postIds = posts.stream()
@@ -76,18 +78,20 @@ public class PostQueryService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<PostListResponse> getPosts(BoardType boardType, Pageable pageable, User user) {
+    public PageResponse<PostListResponse> getPosts(BoardType boardType, Pageable pageable, User user, PostSortType sortType) {
+
+        Pageable sortedPageable = sortType.applyTo(pageable);
 
         Page<Post> page = postRepository
                 .findByBoardTypeAndVisibility(
                         boardType,
                         Visibility.PUBLIC,
-                        pageable
+                        sortedPageable
                 );
 
         List<Post> posts = page.getContent();
         if (posts.isEmpty()) {
-            return PageResponse.from(Page.empty());
+            return PageResponse.empty(page);
         }
 
         List<Long> postIds = posts.stream()
@@ -153,7 +157,7 @@ public class PostQueryService {
                 .toList();
 
         if (posts.isEmpty()) {
-            return PageResponse.from(Page.empty());
+            return PageResponse.empty(likePage);
         }
 
         List<Long> postIds = posts.stream()
@@ -181,8 +185,11 @@ public class PostQueryService {
     public PageResponse<PostListResponse> getUserPosts(
             Long targetUserId,
             User requester,
-            Pageable pageable
+            Pageable pageable,
+            PostSortType sortType
     ) {
+
+        Pageable sortedPageable = sortType.applyTo(pageable);
 
         Page<Post> page;
 
@@ -190,7 +197,7 @@ public class PostQueryService {
 
             page = postRepository.findByUser_UserId(
                     targetUserId,
-                    pageable
+                    sortedPageable
             );
 
         } else {
@@ -198,14 +205,14 @@ public class PostQueryService {
                     .findByUser_UserIdAndVisibility(
                             targetUserId,
                             Visibility.PUBLIC,
-                            pageable
+                            sortedPageable
                     );
         }
 
         List<Post> posts = page.getContent();
 
         if (posts.isEmpty()) {
-            return PageResponse.from(Page.empty());
+            return PageResponse.empty(page);
         }
 
         List<Long> postIds = posts.stream()
@@ -239,24 +246,27 @@ public class PostQueryService {
             BoardType boardType,
             String keyword,
             User user,
-            Pageable pageable
+            Pageable pageable,
+            PostSortType sortType
     ) {
 
         if (keyword == null || keyword.trim().isEmpty()) {
-            return getPosts(boardType, pageable, user);
+            return getPosts(boardType, pageable, user, sortType);
         }
+
+        Pageable sortedPageable = sortType.applyTo(pageable);
 
         List<String> keywords = parseKeywords(keyword);
 
         Specification<Post> spec = PostSpecification.base(boardType)
                 .and(PostSpecification.keywordOr(keywords));
 
-        Page<Post> page = postRepository.findAll(spec, pageable);
+        Page<Post> page = postRepository.findAll(spec, sortedPageable);
 
         List<Post> posts = page.getContent();
 
         if (posts.isEmpty()) {
-            return PageResponse.from(Page.empty());
+            return PageResponse.empty(page);
         }
 
         List<Long> postIds = posts.stream()

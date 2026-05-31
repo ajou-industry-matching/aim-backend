@@ -37,4 +37,15 @@ public class PageResponse<T> {
                 .totalPages(page.getTotalPages())
                 .build();
     }
+
+    public static <T> PageResponse<T> empty(Page<?> page) {
+
+        return PageResponse.<T>builder()
+                .content(List.of())
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .build();
+    }
 }
