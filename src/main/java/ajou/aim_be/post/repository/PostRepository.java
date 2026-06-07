@@ -20,6 +20,12 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
             Pageable pageable
     );
 
+    Page<Post> findByBoardTypeInAndVisibility(
+            List<BoardType> boardTypes,
+            Visibility visibility,
+            Pageable pageable
+    );
+
     Page<Post> findByUser_UserId(
             Long userId,
             Pageable pageable
