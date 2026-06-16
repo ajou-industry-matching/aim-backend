@@ -412,9 +412,14 @@ public class PostQueryService {
                 .stream()
                 .collect(Collectors.groupingBy(
                         pk -> pk.getPost().getPostId(),
-                        Collectors.mapping(
-                                pk -> KeywordResponse.from(pk.getKeyword()),
-                                Collectors.toList()
+                        Collectors.collectingAndThen(
+                                Collectors.mapping(
+                                        pk -> KeywordResponse.from(pk.getKeyword()),
+                                        Collectors.toList()
+                                ),
+                                keywords -> keywords.stream()
+                                        .limit(2)
+                                        .toList()
                         )
                 ));
     }
