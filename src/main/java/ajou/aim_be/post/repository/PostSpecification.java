@@ -44,4 +44,52 @@ public class PostSpecification {
             return cb.or(orPredicates.toArray(new Predicate[0]));
         };
     }
+
+    public static Specification<Post> departmentIn(List<String> departments) {
+        return (root, query, cb) -> {
+
+            if (departments == null || departments.isEmpty()) {
+                return cb.conjunction();
+            }
+
+            List<String> normalizedDepartments = departments.stream()
+                    .filter(department -> department != null && !department.trim().isEmpty())
+                    .map(String::trim)
+                    .distinct()
+                    .toList();
+
+            if (normalizedDepartments.isEmpty()) {
+                return cb.conjunction();
+            }
+
+            Join<Post, ?> user = root.join("user", JoinType.INNER);
+
+            return user.get("department").in(normalizedDepartments);
+        };
+    }
+
+    public static Specification<Post> keywordIdIn(List<Long> keywordIds) {
+        return (root, query, cb) -> {
+
+            if (keywordIds == null || keywordIds.isEmpty()) {
+                return cb.conjunction();
+            }
+
+            List<Long> normalizedKeywordIds = keywordIds.stream()
+                    .filter(id -> id != null)
+                    .distinct()
+                    .toList();
+
+            if (normalizedKeywordIds.isEmpty()) {
+                return cb.conjunction();
+            }
+
+            query.distinct(true);
+
+            Join<Post, PostKeyword> pk = root.join("postKeywords", JoinType.INNER);
+            Join<PostKeyword, Keyword> k = pk.join("keyword", JoinType.INNER);
+
+            return k.get("keywordId").in(normalizedKeywordIds);
+        };
+    }
 }

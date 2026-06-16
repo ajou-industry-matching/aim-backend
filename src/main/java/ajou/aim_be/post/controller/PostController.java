@@ -51,11 +51,15 @@ public class PostController {
             @PathVariable BoardType boardType,
             @Parameter(description = "정렬 기준", example = "LATEST")
             @RequestParam(defaultValue = "LATEST") PostSortType sortType,
+            @Parameter(description = "학과 필터", example = "소프트웨어학과")
+            @RequestParam(required = false) List<String> departments,
+            @Parameter(description = "키워드 ID 필터", example = "1")
+            @RequestParam(required = false) List<Long> keywordIds,
             @PageableDefault(size = 10) Pageable pageable,
             @AuthenticationPrincipal User user
     ) {
 
-        return postQueryService.getPosts(boardType, pageable, user, sortType);
+        return postQueryService.getPosts(boardType, pageable, user, sortType, departments, keywordIds);
     }
 
     @Operation(
@@ -169,10 +173,22 @@ public class PostController {
             @RequestParam(required = false) String keyword,
             @Parameter(description = "정렬 기준", example = "LATEST")
             @RequestParam(defaultValue = "LATEST") PostSortType sortType,
+            @Parameter(description = "학과 필터", example = "소프트웨어학과")
+            @RequestParam(required = false) List<String> departments,
+            @Parameter(description = "키워드 ID 필터", example = "1")
+            @RequestParam(required = false) List<Long> keywordIds,
             @AuthenticationPrincipal User user,
             @PageableDefault(size = 10) Pageable pageable
     ) {
-        return postQueryService.searchPosts(boardType, keyword, user, pageable, sortType);
+        return postQueryService.searchPosts(
+                boardType,
+                keyword,
+                user,
+                pageable,
+                sortType,
+                departments,
+                keywordIds
+        );
     }
 
     @Operation(summary = "최근 게시글 조회", description = "최근 게시글 4개를 조회합니다.")
