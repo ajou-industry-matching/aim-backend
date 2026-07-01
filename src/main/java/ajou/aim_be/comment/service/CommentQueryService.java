@@ -58,31 +58,15 @@ public class CommentQueryService {
                         ));
 
         List<CommentResponse> responses = parents.stream()
-                .map(parent -> CommentResponse.builder()
-                        .commentId(parent.getCommentId())
-                        .userId(parent.getUser().getUserId())
-                        .content(resolveContent(parent,user))
-                        .createdAt(parent.getCreatedAt())
-                        .isDeleted(parent.isDeleted())
-                        .isPrivate(parent.getVisibility() == Visibility.PRIVATE)
-                        .visibility(parent.getVisibility())
-                        .children(
-                                childMap.getOrDefault(parent.getCommentId(), List.of())
-                                        .stream()
-                                        .map(child -> CommentResponse.builder()
-                                                .commentId(child.getCommentId())
-                                                .userId(child.getUser().getUserId())
-                                                .content(resolveContent(child, user))
-                                                .createdAt(child.getCreatedAt())
-                                                .isDeleted(child.isDeleted())
-                                                .isPrivate(child.getVisibility() == Visibility.PRIVATE)
-                                                .visibility(child.getVisibility())
-                                                .build()
-                                        )
-                                        .toList()
-                        )
-                        .build()
-                )
+                .map(parent -> {
+                    List<CommentResponse> childResponses =
+                            childMap.getOrDefault(parent.getCommentId(), List.of())
+                                    .stream()
+                                    .map(child -> toResponse(child, user, List.of()))
+                                    .toList();
+
+                    return toResponse(parent, user, childResponses);
+                })
                 .toList();
 
         return PageResponse.<CommentResponse>builder()
@@ -91,6 +75,35 @@ public class CommentQueryService {
                 .size(page.getSize())
                 .totalElements(page.getTotalElements())
                 .totalPages(page.getTotalPages())
+                .build();
+    }
+
+    private CommentResponse toResponse(
+            Comment comment,
+            User user,
+            List<CommentResponse> children
+    ) {
+        boolean mine = user != null && comment.isOwner(user.getUserId());
+
+        boolean deleted = comment.isDeleted();
+
+        return CommentResponse.builder()
+                .commentId(comment.getCommentId())
+                .parentCommentId(
+                        comment.getParentComment() == null
+                                ? null
+                                : comment.getParentComment().getCommentId()
+                )
+                .userId(deleted ? null : comment.getUser().getUserId())
+                .authorName(deleted ? null : comment.getUser().getName())
+                .department(deleted ? null : comment.getUser().getDepartment())
+                .profileImageUrl(deleted ? null : comment.getUser().getProfileImageUrl())
+                .content(resolveContent(comment, user))
+                .createdAt(comment.getCreatedAt())
+                .isDeleted(deleted)
+                .mine(mine)
+                .visibility(comment.getVisibility())
+                .children(children)
                 .build();
     }
 

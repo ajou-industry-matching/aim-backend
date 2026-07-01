@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -51,11 +52,15 @@ public class CommentCommandService {
             }
         }
 
+        Visibility visibility = parent == null
+                ? request.getVisibility()
+                : parent.getVisibility();
+
         Comment comment = Comment.builder()
                 .post(post)
                 .user(user)
                 .parentComment(parent)
-                .visibility(request.getVisibility())
+                .visibility(visibility)
                 .content(request.getContent())
                 .build();
 
@@ -70,11 +75,16 @@ public class CommentCommandService {
         return CommentCommandResponse.builder()
                 .commentId(comment.getCommentId())
                 .postId(post.getPostId())
-                .parentCommentId(comment.getParentComment().getCommentId())
+                .parentCommentId(parent == null ? null : parent.getCommentId())
                 .userId(user.getUserId())
+                .userId(comment.getUser().getUserId())
+                .authorName(comment.getUser().getName())
+                .department(comment.getUser().getDepartment())
+                .profileImageUrl(comment.getUser().getProfileImageUrl())
                 .content(comment.getContent())
                 .visibility(comment.getVisibility())
                 .isDeleted(false)
+                .mine(true)
                 .createdAt(LocalDateTime.now())
                 .commentCount(post.getCommentCount())
                 .build();
@@ -93,14 +103,39 @@ public class CommentCommandService {
             throw new CustomException(ErrorCode.NO_PERMISSION);
         }
 
+        if (comment.isDeleted()) {
+            throw new CustomException(ErrorCode.INVALID_COMMENT);
+        }
+
         comment.updateContent(request.getContent());
-        comment.changeVisibility(request.getVisibility());
+
+        if (comment.isReply()) {
+            comment.changeVisibility(comment.getParentComment().getVisibility());
+        } else {
+            Visibility visibility = request.getVisibility() == null
+                    ? comment.getVisibility()
+                    : request.getVisibility();
+
+            comment.changeVisibility(visibility);
+
+            List<Comment> children =
+                    commentRepository.findByParentComment_CommentIdInOrderByCreatedAtAsc(
+                            List.of(comment.getCommentId())
+                    );
+
+            children.forEach(child -> child.changeVisibility(visibility));
+        }
+
 
         return CommentCommandResponse.builder()
                 .commentId(comment.getCommentId())
                 .postId(comment.getPost().getPostId())
                 .parentCommentId(comment.getParentComment().getCommentId())
                 .userId(user.getUserId())
+                .authorName(comment.getUser().getName())
+                .department(comment.getUser().getDepartment())
+                .profileImageUrl(comment.getUser().getProfileImageUrl())
+                .mine(true)
                 .content(comment.getContent())
                 .visibility(comment.getVisibility())
                 .isDeleted(false)
@@ -110,9 +145,7 @@ public class CommentCommandService {
 
     @Transactional
     public CommentDeleteResponse deleteComment(Long commentId, User user) {
-        if (user == null) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED);
-        }
+        UserActionPolicy.validateAuthenticated(user);
 
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new CustomException(ErrorCode.COMMENT_NOT_FOUND));
@@ -121,14 +154,17 @@ public class CommentCommandService {
             throw new CustomException(ErrorCode.NO_PERMISSION);
         }
 
+        Post post = comment.getPost();
+
         if (comment.isReply()) {
             commentRepository.delete(comment);
-            comment.getPost().decreaseCommentCount();
+            post.decreaseCommentCount();
 
             return CommentDeleteResponse.builder()
                     .commentId(commentId)
+                    .postId(post.getPostId())
                     .softDeleted(false)
-                    .commentCount(comment.getPost().getCommentCount())
+                    .commentCount(post.getCommentCount())
                     .build();
         }
 
@@ -137,22 +173,24 @@ public class CommentCommandService {
 
         if (!hasChildren) {
             commentRepository.delete(comment);
-            comment.getPost().decreaseCommentCount();
+            post.decreaseCommentCount();
 
             return CommentDeleteResponse.builder()
                     .commentId(commentId)
+                    .postId(post.getPostId())
                     .softDeleted(false)
-                    .commentCount(comment.getPost().getCommentCount())
-                    .build();
-        } else {
-            comment.softDelete();
-
-            return CommentDeleteResponse.builder()
-                    .commentId(commentId)
-                    .softDeleted(false)
-                    .commentCount(comment.getPost().getCommentCount())
+                    .commentCount(post.getCommentCount())
                     .build();
         }
+
+        comment.softDelete();
+
+        return CommentDeleteResponse.builder()
+                .commentId(commentId)
+                .postId(post.getPostId())
+                .softDeleted(true)
+                .commentCount(post.getCommentCount())
+                .build();
     }
 
     private void validatePostCommentPermission(Post post, User user) {

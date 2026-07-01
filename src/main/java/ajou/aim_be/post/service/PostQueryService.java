@@ -84,18 +84,25 @@ public class PostQueryService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<PostListResponse> getPosts(BoardType boardType, Pageable pageable, User user, PostSortType sortType) {
+    public PageResponse<PostListResponse> getPosts(
+            BoardType boardType,
+            Pageable pageable,
+            User user,
+            PostSortType sortType,
+            List<String> departments,
+            List<Long> keywordIds
+    ) {
 
         Pageable sortedPageable = sortType.applyTo(pageable);
 
-        Page<Post> page = postRepository
-                .findByBoardTypeAndVisibility(
-                        boardType,
-                        Visibility.PUBLIC,
-                        sortedPageable
-                );
+        Specification<Post> spec = PostSpecification.base(boardType)
+                .and(PostSpecification.departmentIn(departments))
+                .and(PostSpecification.keywordIdIn(keywordIds));
+
+        Page<Post> page = postRepository.findAll(spec, sortedPageable);
 
         List<Post> posts = page.getContent();
+
         if (posts.isEmpty()) {
             return PageResponse.empty(page);
         }
@@ -298,19 +305,21 @@ public class PostQueryService {
             String keyword,
             User user,
             Pageable pageable,
-            PostSortType sortType
+            PostSortType sortType,
+            List<String> departments,
+            List<Long> keywordIds
     ) {
-
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return getPosts(boardType, pageable, user, sortType);
-        }
 
         Pageable sortedPageable = sortType.applyTo(pageable);
 
-        List<String> keywords = parseKeywords(keyword);
-
         Specification<Post> spec = PostSpecification.base(boardType)
-                .and(PostSpecification.keywordOr(keywords));
+                .and(PostSpecification.departmentIn(departments))
+                .and(PostSpecification.keywordIdIn(keywordIds));
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            List<String> keywords = parseKeywords(keyword);
+            spec = spec.and(PostSpecification.keywordOr(keywords));
+        }
 
         Page<Post> page = postRepository.findAll(spec, sortedPageable);
 
@@ -412,9 +421,14 @@ public class PostQueryService {
                 .stream()
                 .collect(Collectors.groupingBy(
                         pk -> pk.getPost().getPostId(),
-                        Collectors.mapping(
-                                pk -> KeywordResponse.from(pk.getKeyword()),
-                                Collectors.toList()
+                        Collectors.collectingAndThen(
+                                Collectors.mapping(
+                                        pk -> KeywordResponse.from(pk.getKeyword()),
+                                        Collectors.toList()
+                                ),
+                                keywords -> keywords.stream()
+                                        .limit(2)
+                                        .toList()
                         )
                 ));
     }

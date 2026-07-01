@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/comments")
 @RequiredArgsConstructor
-@PreAuthorize("isAuthenticated()")
 public class CommentController {
 
     private final CommentCommandService commandService;
@@ -31,6 +30,7 @@ public class CommentController {
 
     @Operation(summary = "댓글 작성", description = "게시글에 댓글 또는 대댓글을 작성합니다.")
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     public CommentCommandResponse create(
             @AuthenticationPrincipal User user,
             @RequestBody CommentCreateRequest request
@@ -52,6 +52,7 @@ public class CommentController {
 
     @Operation(summary = "댓글 수정", description = "본인이 작성한 댓글을 수정합니다.")
     @PutMapping("/{commentId}")
+    @PreAuthorize("isAuthenticated()")
     public void update(
             @Parameter(description = "댓글 ID", example = "100")
             @PathVariable Long commentId,
@@ -63,6 +64,7 @@ public class CommentController {
 
     @Operation(summary = "댓글 삭제", description = "댓글을 삭제합니다.")
     @DeleteMapping("/{commentId}")
+    @PreAuthorize("isAuthenticated()")
     public void delete(
             @Parameter(description = "댓글 ID", example = "100")
             @PathVariable Long commentId,

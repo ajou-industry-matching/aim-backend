@@ -13,6 +13,8 @@ public interface PostKeywordRepository extends JpaRepository<PostKeyword, Long> 
 
     List<PostKeyword> findByPost_PostIdIn(List<Long> postIds);
 
+    List<PostKeyword> findByPost_PostIdInOrderByPost_PostIdAscPostKeywordIdAsc(List<Long> postIds);
+
     void deleteByKeyword_KeywordId(Long keywordId);
 
 }

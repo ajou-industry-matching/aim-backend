@@ -8,31 +8,25 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Builder
 @Getter
+@Builder
 public class CommentResponse {
 
-    @Schema(description = "댓글 ID")
     private Long commentId;
+    private Long parentCommentId;
 
-    @Schema(description = "작성자 ID")
     private Long userId;
+    private String authorName;
+    private String department;
+    private String profileImageUrl;
 
-    @Schema(description = "댓글 내용")
     private String content;
-
-    @Schema(description = "작성 시간")
     private LocalDateTime createdAt;
 
-    @Schema(description = "삭제 여부")
     private boolean isDeleted;
+    private boolean mine;
 
-    @Schema(description = "비공개 여부")
-    private boolean isPrivate;
-
-    @Schema(description = "공개 범위")
     private Visibility visibility;
 
-    @Schema(description = "대댓글 목록")
     private List<CommentResponse> children;
 }
