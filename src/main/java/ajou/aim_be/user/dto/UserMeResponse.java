@@ -31,6 +31,8 @@ public class UserMeResponse {
     @Schema(description = "프로필 설명")
     private String profileBio;
 
+    private Long userId;
+
     public static UserMeResponse from(
             User user,
             long postCount,
@@ -44,6 +46,7 @@ public class UserMeResponse {
                 .role(user.getUserRole())
                 .department(user.getDepartment())
                 .profileBio(user.getProfileBio())
+                .userId(user.getUserId())
                 .build();
     }
 }
