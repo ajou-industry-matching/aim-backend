@@ -176,51 +176,6 @@ public class PostQueryService {
                 .build();
     }
 
-    @Transactional(readOnly = true)
-    public PageResponse<PostListResponse> getFeedPosts(
-            Pageable pageable,
-            User user,
-            PostSortType sortType
-    ) {
-
-        Pageable sortedPageable = sortType.applyTo(pageable);
-
-        Page<Post> page = postRepository.findByBoardTypeInAndVisibility(
-                FEED_BOARD_TYPES,
-                Visibility.PUBLIC,
-                sortedPageable
-        );
-
-        List<Post> posts = page.getContent();
-
-        if (posts.isEmpty()) {
-            return PageResponse.empty(page);
-        }
-
-        List<Long> postIds = posts.stream()
-                .map(Post::getPostId)
-                .toList();
-
-        Set<Long> likedSet =
-                (user == null)
-                        ? Collections.emptySet()
-                        : new HashSet<>(likeRepository.findLikedPostIds(user.getUserId(), postIds));
-
-        Map<Long, List<KeywordResponse>> keywordMap = buildKeywordMap(postIds);
-
-        List<PostListResponse> responses = posts.stream()
-                .map(post -> assembler.assemble(post, likedSet, keywordMap))
-                .toList();
-
-        return PageResponse.<PostListResponse>builder()
-                .content(responses)
-                .page(page.getNumber())
-                .size(page.getSize())
-                .totalElements(page.getTotalElements())
-                .totalPages(page.getTotalPages())
-                .build();
-    }
-
     @Transactional
     public PostDetailResponse getPost(BoardType boardType, Long postId, User user) {
         Post post = postRepository.findById(postId)
