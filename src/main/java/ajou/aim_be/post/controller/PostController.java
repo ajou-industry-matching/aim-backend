@@ -76,6 +76,20 @@ public class PostController {
         return postQueryService.getFeedPosts(pageable, user, sortType);
     }
 
+    @Operation(
+            summary = "통합 게시글 목록 조회",
+            description = "포트폴리오, 연구실 인턴, 기업 프로젝트 게시글을 통합하여 최신순/인기순/조회순으로 조회합니다."
+    )
+    @GetMapping("/feed")
+    public PageResponse<PostListResponse> getFeedPosts(
+            @Parameter(description = "정렬 기준: LATEST, POPULAR, VIEWS", example = "LATEST")
+            @RequestParam(defaultValue = "LATEST") PostSortType sortType,
+            @PageableDefault(size = 10) Pageable pageable,
+            @AuthenticationPrincipal User user
+    ) {
+        return postQueryService.getFeedPosts(pageable, user, sortType);
+    }
+
     @Operation(summary = "게시글 상세 조회", description = "특정 게시글의 상세 내용을 조회합니다.")
     @GetMapping("/{boardType}/{postId}")
     public PostDetailResponse getPost(
