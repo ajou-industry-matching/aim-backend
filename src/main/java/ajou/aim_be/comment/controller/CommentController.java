@@ -1,9 +1,6 @@
 package ajou.aim_be.comment.controller;
 
-import ajou.aim_be.comment.dto.CommentCommandResponse;
-import ajou.aim_be.comment.dto.CommentCreateRequest;
-import ajou.aim_be.comment.dto.CommentResponse;
-import ajou.aim_be.comment.dto.CommentUpdateRequest;
+import ajou.aim_be.comment.dto.*;
 import ajou.aim_be.comment.service.CommentCommandService;
 import ajou.aim_be.comment.service.CommentQueryService;
 import ajou.aim_be.post.dto.PageResponse;
@@ -53,23 +50,23 @@ public class CommentController {
     @Operation(summary = "댓글 수정", description = "본인이 작성한 댓글을 수정합니다.")
     @PutMapping("/{commentId}")
     @PreAuthorize("isAuthenticated()")
-    public void update(
+    public CommentCommandResponse update(
             @Parameter(description = "댓글 ID", example = "100")
             @PathVariable Long commentId,
             @AuthenticationPrincipal User user,
             @RequestBody CommentUpdateRequest request
     ) {
-        commandService.updateComment(commentId, user, request);
+        return commandService.updateComment(commentId, user, request);
     }
 
     @Operation(summary = "댓글 삭제", description = "댓글을 삭제합니다.")
     @DeleteMapping("/{commentId}")
     @PreAuthorize("isAuthenticated()")
-    public void delete(
+    public CommentDeleteResponse delete(
             @Parameter(description = "댓글 ID", example = "100")
             @PathVariable Long commentId,
             @AuthenticationPrincipal User user
     ) {
-        commandService.deleteComment(commentId, user);
+        return commandService.deleteComment(commentId, user);
     }
 }
