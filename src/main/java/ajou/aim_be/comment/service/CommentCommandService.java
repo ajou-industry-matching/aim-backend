@@ -77,7 +77,6 @@ public class CommentCommandService {
                 .postId(post.getPostId())
                 .parentCommentId(parent == null ? null : parent.getCommentId())
                 .userId(user.getUserId())
-                .userId(comment.getUser().getUserId())
                 .authorName(comment.getUser().getName())
                 .department(comment.getUser().getDepartment())
                 .profileImageUrl(comment.getUser().getProfileImageUrl())
@@ -130,7 +129,11 @@ public class CommentCommandService {
         return CommentCommandResponse.builder()
                 .commentId(comment.getCommentId())
                 .postId(comment.getPost().getPostId())
-                .parentCommentId(comment.getParentComment().getCommentId())
+                .parentCommentId(
+                        comment.getParentComment() == null
+                                ? null
+                                : comment.getParentComment().getCommentId()
+                )
                 .userId(user.getUserId())
                 .authorName(comment.getUser().getName())
                 .department(comment.getUser().getDepartment())
