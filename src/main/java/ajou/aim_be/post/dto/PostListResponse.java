@@ -21,6 +21,9 @@ public class PostListResponse {
     @Schema(description = "작성자 ID", example = "10")
     private Long userId;
 
+    @Schema(description = "작성자 이름")
+    private String authorName;
+
     @Schema(description = "게시판 타입")
     private BoardType boardType;
 
@@ -61,6 +64,7 @@ public class PostListResponse {
         return PostListResponse.builder()
                 .postId(post.getPostId())
                 .userId(post.getUser().getUserId())
+                .authorName(post.getUser().getName())
                 .boardType(post.getBoardType())
                 .title(post.getTitle())
                 .description(post.getDescription())

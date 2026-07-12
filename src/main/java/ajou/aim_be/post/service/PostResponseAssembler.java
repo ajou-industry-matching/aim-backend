@@ -34,6 +34,7 @@ public class PostResponseAssembler {
         return PostListResponse.builder()
                 .postId(post.getPostId())
                 .userId(post.getUser().getUserId())
+                .authorName(post.getUser().getName())
                 .boardType(post.getBoardType())
                 .title(post.getTitle())
                 .description(post.getDescription())

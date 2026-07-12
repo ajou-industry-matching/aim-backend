@@ -401,6 +401,8 @@ public class PostQueryService {
                 .map(post -> PostListResponse.builder()
                         .postId(post.getPostId())
                         .title(post.getTitle())
+                        .userId(post.getUser().getUserId())
+                        .authorName(post.getUser().getName())
                         .description(post.getDescription())
                         .thumbnailImage(post.getThumbnailImage())
                         .viewCount(post.getViewCount())
