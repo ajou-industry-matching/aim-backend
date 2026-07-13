@@ -98,7 +98,7 @@ public class CommentCommandService {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new CustomException(ErrorCode.COMMENT_NOT_FOUND));
 
-        if (!comment.isOwner(user.getUserId()) && !user.isAdmin()) {
+        if (!comment.isOwner(user.getUserId())) {
             throw new CustomException(ErrorCode.NO_PERMISSION);
         }
 
