@@ -26,10 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -206,9 +203,61 @@ public class PostCommandService {
         }
     }
 
-    private void replacePostKeywords(Post post, List<Long> keywordIds) {
-        postKeywordRepository.deleteByPost_PostId(post.getPostId());
-        savePostKeywords(post, keywordIds);
+    private void replacePostKeywords(
+            Post post,
+            List<Long> requestedKeywordIds
+    ) {
+        List<Long> safeRequestedIds = requestedKeywordIds == null
+                ? List.of()
+                : requestedKeywordIds;
+
+        validateKeywordIds(safeRequestedIds);
+
+        Set<Long> requestedIds = new HashSet<>(safeRequestedIds);
+
+        List<PostKeyword> existingPostKeywords =
+                postKeywordRepository.findByPost_PostId(post.getPostId());
+
+        Set<Long> existingIds = existingPostKeywords.stream()
+                .map(postKeyword -> postKeyword.getKeyword().getKeywordId())
+                .collect(Collectors.toSet());
+
+        List<PostKeyword> toDelete = existingPostKeywords.stream()
+                .filter(postKeyword ->
+                        !requestedIds.contains(
+                                postKeyword.getKeyword().getKeywordId()
+                        )
+                )
+                .toList();
+
+        if (!toDelete.isEmpty()) {
+            postKeywordRepository.deleteAll(toDelete);
+        }
+
+        Set<Long> idsToAdd = new HashSet<>(requestedIds);
+        idsToAdd.removeAll(existingIds);
+
+        if (idsToAdd.isEmpty()) {
+            return;
+        }
+
+        List<Keyword> keywords =
+                keywordRepository.findByKeywordIdIn(
+                        new ArrayList<>(idsToAdd)
+                );
+
+        if (keywords.size() != idsToAdd.size()) {
+            throw new CustomException(ErrorCode.INVALID_KEYWORD);
+        }
+
+        List<PostKeyword> newPostKeywords = keywords.stream()
+                .map(keyword -> PostKeyword.builder()
+                        .post(post)
+                        .keyword(keyword)
+                        .build())
+                .toList();
+
+        postKeywordRepository.saveAll(newPostKeywords);
     }
 
     private void saveAttachments(Post post, List<MultipartFile> files, AttachmentType type) {
