@@ -43,6 +43,8 @@ public class User {
     @Column(name = "profile_image_url")
     private String profileImageUrl;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private AdminRole adminRole;
 
     @CreationTimestamp

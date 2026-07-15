@@ -3,6 +3,7 @@ package ajou.aim_be.auth.service;
 import ajou.aim_be.auth.dto.LoginRequest;
 import ajou.aim_be.global.exception.CustomException;
 import ajou.aim_be.global.exception.ErrorCode;
+import ajou.aim_be.user.AdminRole;
 import ajou.aim_be.user.User;
 import ajou.aim_be.user.UserRole;
 import ajou.aim_be.user.UserStatus;
@@ -75,6 +76,7 @@ public class AuthService {
                 .provider(token.getIssuer())
                 .userRole(request.getRole())
                 .userStatus(status)
+                .adminRole(AdminRole.NONE)
                 .build();
 
         user.updateLastLogin();
