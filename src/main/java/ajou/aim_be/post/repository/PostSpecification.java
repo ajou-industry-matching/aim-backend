@@ -14,10 +14,19 @@ import java.util.List;
 public class PostSpecification {
 
     public static Specification<Post> base(BoardType boardType) {
-        return (root, query, cb) -> cb.and(
-                cb.equal(root.get("boardType"), boardType),
-                cb.equal(root.get("visibility"), Visibility.PUBLIC)
-        );
+
+        return (root, query, cb) -> {
+
+            if (query != null && query.getResultType() != Long.class
+                    && query.getResultType() != long.class) {
+                root.fetch("user", JoinType.INNER);
+            }
+
+            return cb.and(
+                    cb.equal(root.get("boardType"), boardType),
+                    cb.equal(root.get("visibility"), Visibility.PUBLIC)
+            );
+        };
     }
 
     public static Specification<Post> keywordOr(List<String> keywords) {

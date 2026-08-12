@@ -47,7 +47,11 @@ public enum ErrorCode {
     KEYWORD_NOT_FOUND(404, "키워드를 찾을 수 없습니다."),
 
     COMMENT_NOT_FOUND(404, "댓글을 찾을 수 없습니다."),
-    INVALID_COMMENT(400, "유효하지 않은 댓글입니다.");
+    INVALID_COMMENT(400, "유효하지 않은 댓글입니다."),
+
+
+    CRAWLED_PROJECT_NOT_FOUND(404, "크롤링 프로젝트를 찾을 수 없습니다."),
+    CRAWLED_PROJECT_MEMBER_REQUIRED(403, "해당 프로젝트의 참여자만 포트폴리오로 가져올 수 있습니다.");
 
 
     private final int status;

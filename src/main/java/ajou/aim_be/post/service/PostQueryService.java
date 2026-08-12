@@ -419,7 +419,8 @@ public class PostQueryService {
 
     private Map<Long, List<KeywordResponse>> buildKeywordMap(List<Long> postIds) {
 
-        return postKeywordRepository.findByPost_PostIdIn(postIds)
+                return postKeywordRepository
+                .findAllWithKeywordByPostIds(postIds)
                 .stream()
                 .collect(Collectors.groupingBy(
                         pk -> pk.getPost().getPostId(),
