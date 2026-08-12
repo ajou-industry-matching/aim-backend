@@ -45,7 +45,6 @@ public class PostResponseAssembler {
                 .createdAt(post.getCreatedAt())
                 .visibility(post.getVisibility())
                 .viewCount(post.getViewCount())
-                .commentCount(post.getCommentCount())
                 .keywords(keywords)
                 .build();
     }
