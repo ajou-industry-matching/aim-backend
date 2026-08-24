@@ -77,6 +77,7 @@ public class PostResponseAssembler {
 
         return PostDetailResponse.builder()
                 .postId(post.getPostId())
+                .authorName(post.getUser().getName())
                 .userId(post.getUser().getUserId())
                 .boardType(post.getBoardType())
                 .title(post.getTitle())
