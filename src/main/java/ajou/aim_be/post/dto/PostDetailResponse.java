@@ -21,6 +21,8 @@ public class PostDetailResponse {
     @Schema(description = "작성자 ID", example = "10")
     private Long userId;
 
+    private String authorName;
+
     @Schema(description = "게시판 타입", example = "PORTFOLIO")
     private BoardType boardType;
 
@@ -79,6 +81,7 @@ public class PostDetailResponse {
                 .postId(post.getPostId())
                 .userId(post.getUser().getUserId())
                 .boardType(post.getBoardType())
+                .authorName(post.getUser().getName())
                 .title(post.getTitle())
                 .content(post.getContent())
                 .description(post.getDescription())
