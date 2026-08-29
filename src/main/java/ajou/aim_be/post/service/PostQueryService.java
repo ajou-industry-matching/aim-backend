@@ -211,7 +211,7 @@ public class PostQueryService {
         List<Post> posts = likePage.getContent()
                 .stream()
                 .map(Like::getPost)
-                .filter(post -> post.getVisibility() == Visibility.PUBLIC)
+//                .filter(post -> post.getVisibility() == Visibility.PUBLIC)
                 .toList();
 
         if (posts.isEmpty()) {

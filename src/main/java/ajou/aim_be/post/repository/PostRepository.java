@@ -5,6 +5,7 @@ import ajou.aim_be.global.common.Visibility;
 import ajou.aim_be.post.Post;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -20,17 +21,20 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
             Pageable pageable
     );
 
+    @EntityGraph(attributePaths = "user")
     Page<Post> findByBoardTypeInAndVisibility(
             List<BoardType> boardTypes,
             Visibility visibility,
             Pageable pageable
     );
 
+    @EntityGraph(attributePaths = "user")
     Page<Post> findByUser_UserId(
             Long userId,
             Pageable pageable
     );
 
+    @EntityGraph(attributePaths = "user")
     Page<Post> findByUser_UserIdAndVisibility(
             Long userId,
             Visibility visibility,
@@ -39,31 +43,13 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
 
     long countByUser_UserId(Long userId);
 
-
-//    @Query("""
-//    SELECT DISTINCT p FROM Post p
-//    LEFT JOIN PostKeyword pk ON pk.post = p
-//    LEFT JOIN Keyword k ON pk.keyword = k
-//    WHERE p.boardType = :boardType
-//    AND p.visibility = ajou.aim_be.global.common.Visibility.PUBLIC
-//    AND (
-//        LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
-//        OR LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
-//        OR LOWER(p.content) LIKE LOWER(CONCAT('%', :keyword, '%'))
-//        OR LOWER(k.keywordName) LIKE LOWER(CONCAT('%', :keyword, '%'))
-//    )
-//    """)
-//    Page<Post> searchPosts(
-//            @Param("boardType") BoardType boardType,
-//            @Param("keyword") String keyword,
-//            Pageable pageable
-//    );
-
+    @EntityGraph(attributePaths = "user")
     Page<Post> findByVisibility(
             Visibility visibility,
             Pageable pageable
     );
 
+    @EntityGraph(attributePaths = "user")
     List<Post> findTop4ByBoardTypeAndVisibilityOrderByCreatedAtDesc(
             BoardType boardType,
             Visibility visibility
