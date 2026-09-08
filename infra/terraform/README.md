@@ -93,7 +93,7 @@ terraform plan \
   -var="bootstrap_image=<ARTIFACT_REGISTRY_REGION>-docker.pkg.dev/<PROJECT_ID>/<REPOSITORY>/aim-backend:bootstrap"
 ```
 
-기존 Cloud Run 서비스가 이미 있다면 새로 만들기 전에 import를 먼저 한다.
+`asia-northeast3`에 `aim-be-prod` service가 이미 생성되어 있다면(예: 배포 workflow가 먼저 생성한 경우) 새로 만들기 전에 import를 먼저 한다. 이 import는 `asia-northeast3`에 이미 존재하는 service에만 적용되며, 기존 `us-central1` service를 옮기지는 않는다. 새 service를 Terraform으로 직접 생성할 때는 import 없이 `terraform apply`로 만든다. 기존 `us-central1` service는 cleanup 전까지 별도 service로 유지된다.
 
 ```bash
 terraform import \
