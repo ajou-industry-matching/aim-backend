@@ -16,7 +16,7 @@ concurrency:
 
 env:
   GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
-  CLOUD_RUN_REGION: us-central1
+  CLOUD_RUN_REGION: asia-northeast3
   CLOUD_RUN_SERVICE: aim-be-prod
   ARTIFACT_REGISTRY_REGION: asia-northeast3
   ARTIFACT_REGISTRY_REPOSITORY: app-repo

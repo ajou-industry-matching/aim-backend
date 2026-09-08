@@ -56,7 +56,7 @@ job 구조:
 <ARTIFACT_REGISTRY_REGION>-docker.pkg.dev/<PROJECT_ID>/<REPOSITORY>/<IMAGE_NAME>:<GITHUB_SHA>
 ```
 
-현재 운영 프론트의 Firebase Hosting rewrite는 `/api/**` 요청을 `aim-be-prod`의 `us-central1` service로 전달한다. 따라서 백엔드 배포 workflow도 실제 운영 API인 `aim-be-prod`를 배포 대상으로 고정한다. 기존 `aim-be` service는 운영 프론트가 바라보지 않는 레거시 service로 취급한다.
+현재 운영 프론트의 Firebase Hosting rewrite는 `/api/**` 요청을 `aim-be-prod`의 `asia-northeast3` service로 전달한다. 따라서 백엔드 배포 workflow도 실제 운영 API인 `aim-be-prod`를 배포 대상으로 고정한다. 기존 `aim-be` service는 운영 프론트가 바라보지 않는 레거시 service로 취급한다.
 
 ## GitHub Variables
 
@@ -75,7 +75,7 @@ Repository Settings > Secrets and variables > Actions > Variables에 등록한�
 
 | 이름 | 값 | 설명 |
 | --- | --- | --- |
-| `CLOUD_RUN_REGION` | `us-central1` | 실제 운영 Cloud Run region |
+| `CLOUD_RUN_REGION` | `asia-northeast3` | 실제 운영 Cloud Run region |
 | `CLOUD_RUN_SERVICE` | `aim-be-prod` | 실제 운영 Cloud Run service |
 | `ARTIFACT_REGISTRY_REGION` | `asia-northeast3` | 기존 `app-repo`가 있는 Artifact Registry region |
 | `ARTIFACT_REGISTRY_REPOSITORY` | `app-repo` | Artifact Registry repository ID |

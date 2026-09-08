@@ -87,7 +87,7 @@ terraform fmt -check
 terraform validate
 terraform plan \
   -var="project_id=<PROJECT_ID>" \
-  -var="cloud_run_region=us-central1" \
+  -var="cloud_run_region=asia-northeast3" \
   -var="artifact_registry_region=asia-northeast3" \
   -var="service_name=aim-be-prod" \
   -var="bootstrap_image=<ARTIFACT_REGISTRY_REGION>-docker.pkg.dev/<PROJECT_ID>/<REPOSITORY>/aim-backend:bootstrap"
@@ -98,7 +98,7 @@ terraform plan \
 ```bash
 terraform import \
   'google_cloud_run_v2_service.app' \
-  'projects/<PROJECT_ID>/locations/us-central1/services/aim-be-prod'
+  'projects/<PROJECT_ID>/locations/asia-northeast3/services/aim-be-prod'
 ```
 
 import 후 `terraform plan`에서 의도하지 않은 service account, secret, env, ingress 변경이 없는지 확인한다.
