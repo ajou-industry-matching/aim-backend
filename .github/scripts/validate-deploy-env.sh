@@ -22,8 +22,8 @@ for name in "${required_vars[@]}"; do
   fi
 done
 
-if [ -n "${CLOUD_RUN_REGION:-}" ] && [ "${CLOUD_RUN_REGION}" != "us-central1" ]; then
-  echo "::error::CLOUD_RUN_REGION must be us-central1 for aim-be-prod deployments"
+if [ -n "${CLOUD_RUN_REGION:-}" ] && [ "${CLOUD_RUN_REGION}" != "asia-northeast3" ]; then
+  echo "::error::CLOUD_RUN_REGION must be asia-northeast3 for aim-be-prod deployments"
   missing=1
 fi
 
