@@ -24,9 +24,11 @@ public class CrawledProjectCommandService {
     private final CrawledProjectMemberRepository memberRepository;
     private final PostRepository postRepository;
     private final PostResponseAssembler postResponseAssembler;
+    private final CrawlStatusService crawlStatusService;
+
 
     @Transactional
-    public void save(
+    public void saveByAdmin(
             CrawledProjectCreateRequest request,
             User user
     ) {
@@ -34,6 +36,20 @@ public class CrawledProjectCommandService {
                 BoardType.CRAWLED_PROJECT,
                 user
         );
+
+        saveProject(request);
+    }
+
+    @Transactional
+    public void saveFromCrawler(
+            CrawledProjectCreateRequest request
+    ) {
+        saveProject(request);
+    }
+
+    private void saveProject(
+            CrawledProjectCreateRequest request
+    ) {
 
         CrawledProject project =
                 projectRepository
@@ -87,6 +103,8 @@ public class CrawledProjectCommandService {
         }
 
         projectRepository.save(project);
+
+        crawlStatusService.markCompleted();
     }
 
     @Transactional
@@ -95,6 +113,20 @@ public class CrawledProjectCommandService {
             User user
     ) {
         UserActionPolicy.validateActive(user);
+
+        Post existingPost = postRepository
+                .findFirstByUser_UserIdAndCrawledProjectIdOrderByPostIdAsc(
+                        user.getUserId(),
+                        projectId
+                )
+                .orElse(null);
+
+        if (existingPost != null) {
+            return postResponseAssembler.assemble(
+                    existingPost,
+                    user.getUserId()
+            );
+        }
 
         CrawledProject project =
                 projectRepository.findById(projectId)
@@ -120,6 +152,7 @@ public class CrawledProjectCommandService {
         Post post = Post.builder()
                 .user(user)
                 .boardType(BoardType.PORTFOLIO)
+                .crawledProjectId(projectId)
                 .title(project.getTitle())
                 .description(project.getDescription())
                 .content(project.getContent())
@@ -130,12 +163,7 @@ public class CrawledProjectCommandService {
 
         postRepository.save(post);
 
-        /*
-         * 크롤링된 대표 이미지는 이미 외부 URL로 저장되어 있으므로
-         * Firebase Storage에 새로 업로드하지 않고 URL만 복사한다.
-         *
-         * storageKey는 null로 유지한다.
-         */
+
         if (project.getRepresentativeImage() != null &&
                 !project.getRepresentativeImage().isBlank()) {
 

@@ -142,6 +142,17 @@ public class PostController {
         return postCommandService.deletePost(boardType, postId, user);
     }
 
+    @Operation(
+            summary = "전체 게시글 조회",
+            description = "게시판 카테고리와 관계없이 모든 공개 게시글을 조회합니다."
+    )
+    @GetMapping("/all")
+    public List<PostListResponse> getAllPosts(
+            @AuthenticationPrincipal User user
+    ) {
+        return postQueryService.getAllPosts(user);
+    }
+
     @Operation(summary = "좋아요한 게시글 조회", description = "현재 로그인한 사용자가 좋아요한 게시글 목록을 조회합니다.")
     @GetMapping("/liked")
     public PageResponse<PostListResponse> getLikedPosts(

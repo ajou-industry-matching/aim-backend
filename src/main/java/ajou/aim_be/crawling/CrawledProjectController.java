@@ -1,5 +1,6 @@
 package ajou.aim_be.crawling;
 
+import ajou.aim_be.crawling.dto.CrawlStatusResponse;
 import ajou.aim_be.crawling.dto.CrawledProjectCreateRequest;
 import ajou.aim_be.crawling.dto.CrawledProjectResponse;
 import ajou.aim_be.post.dto.PostDetailResponse;
@@ -22,19 +23,31 @@ public class CrawledProjectController {
 
     private final CrawledProjectCommandService commandService;
     private final CrawledProjectQueryService queryService;
+    private final CrawlStatusService crawlStatusService;
+
+    @Operation(
+            summary = "크롤링 프로젝트 저장",
+            description = "자동 크롤링한 프로젝트 데이터를 저장합니다."
+    )
+    @PostMapping("/crawler")
+    public ResponseEntity<Void> createCrawler(
+            @RequestBody CrawledProjectCreateRequest request
+    ) {
+        commandService.saveFromCrawler(request);
+        return ResponseEntity.ok().build();
+    }
 
     @Operation(
             summary = "크롤링 프로젝트 저장",
             description = "관리자가 크롤링한 프로젝트 데이터를 저장합니다."
     )
+    @PostMapping("/admin")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
-    @PostMapping
     public ResponseEntity<Void> create(
             @RequestBody CrawledProjectCreateRequest request,
             @AuthenticationPrincipal User user
     ) {
-        commandService.save(request, user);
-
+        commandService.saveByAdmin(request, user);
         return ResponseEntity.ok().build();
     }
 
@@ -76,6 +89,13 @@ public class CrawledProjectController {
         return commandService.cloneToPortfolio(
                 projectId,
                 user
+        );
+    }
+
+    @GetMapping("/status")
+    public CrawlStatusResponse getStatus() {
+        return new CrawlStatusResponse(
+                crawlStatusService.getLastCrawledAt()
         );
     }
 }
