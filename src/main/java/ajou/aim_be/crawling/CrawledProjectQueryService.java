@@ -5,6 +5,8 @@ import ajou.aim_be.crawling.dto.CrawledProjectResponse;
 import ajou.aim_be.global.exception.CustomException;
 import ajou.aim_be.global.exception.ErrorCode;
 import ajou.aim_be.global.policy.UserActionPolicy;
+import ajou.aim_be.post.Post;
+import ajou.aim_be.post.repository.PostRepository;
 import ajou.aim_be.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -22,6 +25,7 @@ public class CrawledProjectQueryService {
 
     private final CrawledProjectRepository projectRepository;
     private final CrawledProjectMemberRepository memberRepository;
+    private final PostRepository postRepository;
 
     public List<CrawledProjectResponse> getMyProjects(User user) {
 
@@ -44,13 +48,34 @@ public class CrawledProjectQueryService {
         List<CrawledProject> projects =
                 projectRepository.findDistinctByCrawledProjectIdIn(projectIds);
 
+
+        List<Post> importedPosts =
+                postRepository.findByUser_UserIdAndCrawledProjectIdIn(
+                        user.getUserId(),
+                        projectIds
+                );
+
+        Map<Long, Long> importedMap =
+                importedPosts.stream()
+                        .collect(Collectors.toMap(
+                                Post::getCrawledProjectId,
+                                Post::getPostId,
+                                (existing, duplicate) -> existing
+                        ));
+
         return projects.stream()
-                .map(project -> CrawledProjectResponse.from(
-                        project,
-                        project.getMembers().stream()
-                                .map(CrawledProjectMemberResponse::from)
-                                .toList()
-                ))
+                .map(project -> {
+                    Long portfolioPostId =
+                            importedMap.get(project.getCrawledProjectId());
+
+                    return CrawledProjectResponse.from(
+                            project,
+                            project.getMembers().stream()
+                                    .map(CrawledProjectMemberResponse::from)
+                                    .toList(),
+                            portfolioPostId
+                    );
+                })
                 .toList();
     }
 
@@ -68,11 +93,21 @@ public class CrawledProjectQueryService {
                                 )
                         );
 
+        Long portfolioPostId =
+                postRepository
+                        .findFirstByUser_UserIdAndCrawledProjectIdOrderByPostIdAsc(
+                                user.getUserId(),
+                                projectId
+                        )
+                        .map(Post::getPostId)
+                        .orElse(null);
+
         return CrawledProjectResponse.from(
                 project,
                 project.getMembers().stream()
                         .map(CrawledProjectMemberResponse::from)
-                        .toList()
+                        .toList(),
+                portfolioPostId
         );
     }
 }

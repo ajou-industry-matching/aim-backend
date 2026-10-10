@@ -58,9 +58,19 @@ public class CrawledProjectResponse {
     @Schema(description = "프로젝트 생성일시")
     private LocalDateTime createdAt;
 
+    private Long portfolioPostId;
+
     public static CrawledProjectResponse from(
             CrawledProject project,
             List<CrawledProjectMemberResponse> members
+    ) {
+        return from(project, members, null);
+    }
+
+    public static CrawledProjectResponse from(
+            CrawledProject project,
+            List<CrawledProjectMemberResponse> members,
+            Long portfolioPostId
     ) {
         return CrawledProjectResponse.builder()
                 .crawledProjectId(project.getCrawledProjectId())
@@ -78,6 +88,7 @@ public class CrawledProjectResponse {
                 .category(project.getCategory())
                 .members(members)
                 .createdAt(project.getCreatedAt())
+                .portfolioPostId(portfolioPostId)
                 .build();
     }
 }
