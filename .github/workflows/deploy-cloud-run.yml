@@ -16,7 +16,7 @@ concurrency:
 
 env:
   GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
-  CLOUD_RUN_REGION: us-central1
+  CLOUD_RUN_REGION: asia-northeast3
   CLOUD_RUN_SERVICE: aim-be-prod
   ARTIFACT_REGISTRY_REGION: asia-northeast3
   ARTIFACT_REGISTRY_REPOSITORY: app-repo
@@ -79,6 +79,9 @@ jobs:
           service: ${{ env.CLOUD_RUN_SERVICE }}
           image: ${{ env.ARTIFACT_REGISTRY_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           region: ${{ env.CLOUD_RUN_REGION }}
+          # Firebase Hosting rewrite가 서비스를 호출하려면 미인증 invoke가 허용돼야 한다.
+          # 명시하지 않으면 새 리전/신규 서비스가 private로 생성돼 /api가 403이 된다. (앱 인증은 Firebase 토큰으로 별도 수행)
+          flags: '--allow-unauthenticated'
           env_vars: |-
             SPRING_PROFILES_ACTIVE=${{ env.SPRING_PROFILES_ACTIVE }}
             DB_URL=${{ env.DB_URL }}

@@ -32,7 +32,7 @@ public class SwaggerConfig {
                         .description("AIM API 문서")
                         .version("v1.0"))
                 .servers(List.of(
-                        new Server().url("https://aim-be-prod-926871086070.us-central1.run.app")
+                        new Server().url("https://aim-be-prod-talhhkr7pq-du.a.run.app")
                 ));
     }
 }

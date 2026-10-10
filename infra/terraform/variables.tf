@@ -6,13 +6,13 @@ variable "project_id" {
 variable "region" {
   description = "Default Google Cloud region kept for backwards-compatible Terraform input."
   type        = string
-  default     = "us-central1"
+  default     = "asia-northeast3"
 }
 
 variable "cloud_run_region" {
   description = "Google Cloud region for the production Cloud Run service."
   type        = string
-  default     = "us-central1"
+  default     = "asia-northeast3"
 }
 
 variable "artifact_registry_region" {

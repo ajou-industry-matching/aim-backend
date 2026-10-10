@@ -12,6 +12,13 @@ spring:
     url: ${DB_URL:jdbc:mysql://localhost:3306/aim?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
     username: ${DB_USER:aim_be}
     password: ${DB_PASSWORD:}
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      connection-timeout: 10000
+      idle-timeout: 600000
+      max-lifetime: 1500000
+      keepalive-time: 300000
 
   jpa:
     database: mysql
