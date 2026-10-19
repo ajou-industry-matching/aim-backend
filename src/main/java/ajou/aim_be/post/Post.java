@@ -80,6 +80,9 @@ public class Post {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "crawled_project_id")
+    private Long crawledProjectId;
+
     @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
     @JsonIgnore
     private List<PostKeyword> postKeywords = new ArrayList<>();

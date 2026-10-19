@@ -11,7 +11,9 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificationExecutor<Post> {
 
@@ -54,4 +56,17 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
             BoardType boardType,
             Visibility visibility
     );
+
+    List<Post> findByUser_UserIdAndCrawledProjectIdIn(
+            Long userId,
+            Collection<Long> crawledProjectIds
+    );
+
+    Optional<Post> findFirstByUser_UserIdAndCrawledProjectIdOrderByPostIdAsc(
+            Long userId,
+            Long crawledProjectId
+    );
+
+    @EntityGraph(attributePaths = "user")
+    List<Post> findByVisibility(Visibility visibility);
 }
