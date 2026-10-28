@@ -36,7 +36,10 @@ public class CrawlerFilter extends OncePerRequestFilter {
         String actualApiKey =
                 request.getHeader("X-Crawler-Key");
 
-        if (actualApiKey == null ||
+        // 키가 설정되지 않은 환경에서는 적재를 허용하지 않는다.
+        // 빈 기본값과 빈 헤더가 MessageDigest.isEqual 로 일치해 통과하는 것을 막는다.
+        if (expectedApiKey == null || expectedApiKey.isBlank() ||
+                actualApiKey == null ||
                 !MessageDigest.isEqual(
                         expectedApiKey.getBytes(StandardCharsets.UTF_8),
                         actualApiKey.getBytes(StandardCharsets.UTF_8)

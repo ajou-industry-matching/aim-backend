@@ -62,4 +62,5 @@ jobs:
           DDL_AUTO: none
           SPRING_JPA_HIBERNATE_DDL_AUTO: none
           FIREBASE_STORAGE_BUCKET: ci-smoke-test-bucket
+          CRAWLER_API_KEY: ci-dummy-crawler-key
         run: bash .github/scripts/smoke-test-docker.sh
