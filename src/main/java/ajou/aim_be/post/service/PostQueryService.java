@@ -176,6 +176,43 @@ public class PostQueryService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
+    public List<PostListResponse> getAllPosts(User user) {
+
+        List<Post> posts = postRepository.findByVisibility(
+                Visibility.PUBLIC
+        );
+
+        if (posts.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> postIds = posts.stream()
+                .map(Post::getPostId)
+                .toList();
+
+        Set<Long> likedSet =
+                user == null
+                        ? Collections.emptySet()
+                        : new HashSet<>(
+                        likeRepository.findLikedPostIds(
+                                user.getUserId(),
+                                postIds
+                        )
+                );
+
+        Map<Long, List<KeywordResponse>> keywordMap =
+                buildKeywordMap(postIds);
+
+        return posts.stream()
+                .map(post -> assembler.assemble(
+                        post,
+                        likedSet,
+                        keywordMap
+                ))
+                .toList();
+    }
+
     @Transactional
     public PostDetailResponse getPost(BoardType boardType, Long postId, User user) {
         Post post = postRepository.findById(postId)

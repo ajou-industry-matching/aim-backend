@@ -43,3 +43,6 @@ firebase:
     json: ${FIREBASE_CREDENTIALS_JSON:}
   storage:
     bucket: ${FIREBASE_STORAGE_BUCKET:ajou-project-cafd9.firebasestorage.app}
+
+crawler:
+  api-key: ${CRAWLER_API_KEY:}
