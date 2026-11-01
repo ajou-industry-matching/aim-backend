@@ -20,7 +20,7 @@ spring:
       max-lifetime: 1500000
       keepalive-time: 300000
 
-  # 운영(prod)에서만 켠다. 로컬/CI DB는 기존 방식 유지.
+  # 운영(prod)·CI 스모크 테스트에서 환경변수(SPRING_FLYWAY_ENABLED)로 켠다.
   flyway:
     enabled: false
 

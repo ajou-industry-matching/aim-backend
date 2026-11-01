@@ -60,8 +60,8 @@ jobs:
           DB_URL: jdbc:mysql://aim-ci-mysql:3306/aim?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
           DB_USER: aim_be
           DB_PASSWORD: ci_password
-          DDL_AUTO: none
-          SPRING_JPA_HIBERNATE_DDL_AUTO: none
+          DDL_AUTO: validate
+          SPRING_JPA_HIBERNATE_DDL_AUTO: validate
           FIREBASE_STORAGE_BUCKET: ci-smoke-test-bucket
           CRAWLER_API_KEY: ci-dummy-crawler-key
         run: bash .github/scripts/smoke-test-docker.sh
