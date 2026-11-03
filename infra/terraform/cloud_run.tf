@@ -45,8 +45,14 @@ resource "google_cloud_run_v2_service" "app" {
       }
 
       env {
-        name  = "DB_URL"
-        value = var.db_url
+        name = "DB_URL"
+
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.db_url.secret_id
+            version = "latest"
+          }
+        }
       }
 
       env {
@@ -70,6 +76,17 @@ resource "google_cloud_run_v2_service" "app" {
         value_source {
           secret_key_ref {
             secret  = google_secret_manager_secret.db_password.secret_id
+            version = "latest"
+          }
+        }
+      }
+
+      env {
+        name = "CRAWLER_API_KEY"
+
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.crawler_api_key.secret_id
             version = "latest"
           }
         }
@@ -134,7 +151,9 @@ resource "google_cloud_run_v2_service" "app" {
   depends_on = [
     google_artifact_registry_repository_iam_member.runtime_reader,
     google_project_service.required,
+    google_secret_manager_secret_iam_member.runtime_crawler_api_key_secret_accessor,
     google_secret_manager_secret_iam_member.runtime_db_password_secret_accessor,
+    google_secret_manager_secret_iam_member.runtime_db_url_secret_accessor,
     google_secret_manager_secret_iam_member.runtime_firebase_secret_accessor,
   ]
 }

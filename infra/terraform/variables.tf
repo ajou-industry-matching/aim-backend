@@ -98,10 +98,16 @@ variable "db_password_secret_id" {
   default     = "aim-be-db-password"
 }
 
-variable "db_url" {
-  description = "JDBC URL used by the backend."
+variable "db_url_secret_id" {
+  description = "Secret Manager secret ID for the backend JDBC URL. Managed by the deploy workflow; injected as the DB_URL env var."
   type        = string
-  default     = "jdbc:mysql://161.33.46.41:3306/aim?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8"
+  default     = "DB_URL"
+}
+
+variable "crawler_api_key_secret_id" {
+  description = "Secret Manager secret ID for the crawler ingestion API key. Managed by the deploy workflow; injected as the CRAWLER_API_KEY env var."
+  type        = string
+  default     = "CRAWLER_API_KEY"
 }
 
 variable "db_user" {
