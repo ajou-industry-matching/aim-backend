@@ -66,7 +66,9 @@ for name in DB_URL DB_PASSWORD FIREBASE_CREDENTIALS_JSON CRAWLER_API_KEY; do
 done
 ```
 
-기존 프로젝트는 워크플로가 이미 4개를 만들어 뒀으므로, apply 전에 **import가 필요하다**(아래 "실행 예시").
+`FIREBASE_CREDENTIALS_JSON`에 넣는 값은 **base64로 인코딩한** 서비스 계정 JSON이다. 앱이 `FirebaseAdminConfig`에서 base64로 디코딩한다.
+
+이렇게 만든 secret은 Terraform 밖에서 생긴 것이므로, **apply 전에 import까지 해야 한다.** 그냥 apply하면 같은 이름으로 또 만들려다 실패한다. 기존 프로젝트도 워크플로가 이미 4개를 만들어 뒀으므로 마찬가지다. import 명령은 아래 "실행 예시"에 있다.
 
 ## Cloud Run env 계약
 
