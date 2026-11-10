@@ -80,34 +80,10 @@ variable "github_workload_identity_provider_id" {
   default     = "github"
 }
 
-variable "firebase_credentials_secret_id" {
-  description = "Secret Manager secret ID for the Firebase Admin SDK JSON credential."
-  type        = string
-  default     = "aim-backend-firebase-adminsdk"
-}
-
 variable "firebase_storage_bucket" {
   description = "Firebase Storage bucket name used by the backend."
   type        = string
   default     = "ajou-project-cafd9.firebasestorage.app"
-}
-
-variable "db_password_secret_id" {
-  description = "Secret Manager secret ID for the application database password."
-  type        = string
-  default     = "aim-be-db-password"
-}
-
-variable "db_url_secret_id" {
-  description = "Secret Manager secret ID for the backend JDBC URL. Managed by the deploy workflow; injected as the DB_URL env var."
-  type        = string
-  default     = "DB_URL"
-}
-
-variable "crawler_api_key_secret_id" {
-  description = "Secret Manager secret ID for the crawler ingestion API key. Managed by the deploy workflow; injected as the CRAWLER_API_KEY env var."
-  type        = string
-  default     = "CRAWLER_API_KEY"
 }
 
 variable "db_user" {
@@ -177,9 +153,9 @@ variable "environment_variables" {
   validation {
     condition = length([
       for key in keys(var.environment_variables) : key
-      if contains(["DB_PASSWORD", "DB_URL", "DB_USER", "DDL_AUTO", "SPRING_JPA_HIBERNATE_DDL_AUTO", "SPRING_PROFILES_ACTIVE", "FIREBASE_CREDENTIALS_PATH", "FIREBASE_STORAGE_BUCKET"], key)
+      if contains(["CRAWLER_API_KEY", "DB_PASSWORD", "DB_URL", "DB_USER", "DDL_AUTO", "FIREBASE_CREDENTIALS_JSON", "FIREBASE_STORAGE_BUCKET", "SPRING_FLYWAY_BASELINE_ON_MIGRATE", "SPRING_FLYWAY_BASELINE_VERSION", "SPRING_FLYWAY_ENABLED", "SPRING_JPA_HIBERNATE_DDL_AUTO", "SPRING_PROFILES_ACTIVE"], key)
     ]) == 0
-    error_message = "environment_variables must not contain DB_PASSWORD, DB_URL, DB_USER, DDL_AUTO, SPRING_JPA_HIBERNATE_DDL_AUTO, SPRING_PROFILES_ACTIVE, FIREBASE_CREDENTIALS_PATH, or FIREBASE_STORAGE_BUCKET."
+    error_message = "environment_variables must not contain names the deploy workflow already injects: CRAWLER_API_KEY, DB_PASSWORD, DB_URL, DB_USER, DDL_AUTO, FIREBASE_CREDENTIALS_JSON, FIREBASE_STORAGE_BUCKET, SPRING_FLYWAY_*, SPRING_JPA_HIBERNATE_DDL_AUTO, SPRING_PROFILES_ACTIVE."
   }
 }
 

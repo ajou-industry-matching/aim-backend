@@ -42,42 +42,41 @@ gh variable set GCP_SERVICE_ACCOUNT \
 
 이 방식은 GitHub에 GCP private key를 저장하지 않고, workflow 실행 시점의 짧은 OIDC 토큰으로만 배포 권한을 얻는다.
 
-## Firebase Secret
+## Secret
 
-Terraform은 secret container만 만든다. 실제 Firebase Admin SDK JSON payload는 저장소나 Terraform 변수에 넣지 않고 별도로 등록한다.
+민감값 4개는 Secret Manager에 두고 Cloud Run env로 주입한다. Terraform은 secret container와 env 연결만 선언하고, **값(version)은 넣지 않는다.**
 
-```bash
-gcloud secrets versions add "$(terraform output -raw firebase_credentials_secret_id)" \
-  --data-file="src/main/resources/firebase/ajou-project-cafd9-firebase-adminsdk-fbsvc-e6d8a32d57.json" \
-  --project "<PROJECT_ID>"
-```
+| secret | env | 값을 넣는 주체 |
+| --- | --- | --- |
+| `DB_URL` | `DB_URL` | 배포 워크플로 |
+| `DB_PASSWORD` | `DB_PASSWORD` | 배포 워크플로 |
+| `FIREBASE_CREDENTIALS_JSON` | `FIREBASE_CREDENTIALS_JSON` (base64 JSON) | 배포 워크플로 |
+| `CRAWLER_API_KEY` | `CRAWLER_API_KEY` | 배포 워크플로 |
 
-Cloud Run에는 다음 계약으로 mount된다.
+이름은 `secrets.tf`에 리터럴로 고정했다. 배포 워크플로(`.github/workflows/deploy-cloud-run.yml`)가 GitHub Secrets를 원본으로 같은 이름의 secret을 생성·갱신하고 같은 이름으로 주입하므로, 한쪽만 바꾸면 서비스가 다른 secret을 읽는다.
 
-- mount path: `/secrets/firebase-adminsdk.json`
-- env: `FIREBASE_CREDENTIALS_PATH=/secrets/firebase-adminsdk.json`
-- env: `FIREBASE_STORAGE_BUCKET=<bucket>`
+### 새 프로젝트에서 처음 apply 할 때
 
-## DB Password Secret
-
-DB 비밀번호는 저장소, `terraform.tfvars`, Terraform state에 넣지 않는다. Terraform은 secret container와 Cloud Run env 연결만 관리하고, 실제 secret version은 별도 명령으로 등록한다.
+`version = "latest"`를 읽으므로 **version이 하나도 없는 secret을 참조하면 서비스 생성이 실패한다.** Terraform은 container만 만들기 때문에, 신규 프로젝트에서는 apply 전에 값을 한 번 넣는다.
 
 ```bash
-printf '%s' '<DB_PASSWORD>' | gcloud secrets versions add "$(terraform output -raw db_password_secret_id)" \
-  --data-file=- \
-  --project "<PROJECT_ID>"
+for name in DB_URL DB_PASSWORD FIREBASE_CREDENTIALS_JSON CRAWLER_API_KEY; do
+  gcloud secrets create "$name" --replication-policy=automatic --project "<PROJECT_ID>"
+  printf %s '<VALUE>' | gcloud secrets versions add "$name" --data-file=- --project "<PROJECT_ID>"
+done
 ```
 
-Cloud Run에는 다음 계약으로 주입된다.
+기존 프로젝트는 워크플로가 이미 4개를 만들어 뒀으므로, apply 전에 **import가 필요하다**(아래 "실행 예시").
 
-- env: `DB_URL=<JDBC URL>`
-- env: `DB_USER=aim_be`
-- env: `DB_PASSWORD=<Secret Manager latest version>`
-- env: `SPRING_PROFILES_ACTIVE=prod`
-- env: `DDL_AUTO=validate`
-- env: `SPRING_JPA_HIBERNATE_DDL_AUTO=validate`
+## Cloud Run env 계약
+
+- secret 주입: `DB_URL`, `DB_PASSWORD`, `FIREBASE_CREDENTIALS_JSON`, `CRAWLER_API_KEY`
+- 평문 주입: `SPRING_PROFILES_ACTIVE=prod`, `DB_USER=aim_be`, `DDL_AUTO=validate`, `SPRING_JPA_HIBERNATE_DDL_AUTO=validate`, `FIREBASE_STORAGE_BUCKET=<bucket>`
+- Flyway: `SPRING_FLYWAY_ENABLED=true`, `SPRING_FLYWAY_BASELINE_ON_MIGRATE=true`, `SPRING_FLYWAY_BASELINE_VERSION=1`
 
 `DDL_AUTO`와 `SPRING_JPA_HIBERNATE_DDL_AUTO`는 운영 DB 스키마 자동 삭제/생성을 막기 위해 `validate` 또는 `none`만 허용한다.
+
+운영 설정은 `application-prod.yml`이 아니라 위 env로 넘긴다. 이미지 빌드에서 프로파일 yml이 제외돼 설정이 조용히 사라진 적이 있다(#59).
 
 ## 실행 예시
 
@@ -101,4 +100,13 @@ terraform import \
   'projects/<PROJECT_ID>/locations/asia-northeast3/services/aim-be-prod'
 ```
 
-import 후 `terraform plan`에서 의도하지 않은 service account, secret, env, ingress 변경이 없는지 확인한다.
+secret 4개도 워크플로가 이미 만들어 둔 것이므로 함께 import한다. 안 하면 apply가 같은 이름으로 새로 만들려다 실패한다.
+
+```bash
+terraform import 'google_secret_manager_secret.db_url'               'projects/<PROJECT_ID>/secrets/DB_URL'
+terraform import 'google_secret_manager_secret.db_password'          'projects/<PROJECT_ID>/secrets/DB_PASSWORD'
+terraform import 'google_secret_manager_secret.firebase_credentials' 'projects/<PROJECT_ID>/secrets/FIREBASE_CREDENTIALS_JSON'
+terraform import 'google_secret_manager_secret.crawler_api_key'      'projects/<PROJECT_ID>/secrets/CRAWLER_API_KEY'
+```
+
+import 후 `terraform plan`에서 의도하지 않은 service account, secret, env, ingress 변경이 없는지 확인한다. state가 원격 백엔드 없이 로컬에만 있으므로, apply는 state를 가진 한 사람이 배포 워크플로와 겹치지 않는 시점에 수행한다.

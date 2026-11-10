@@ -1,9 +1,5 @@
 locals {
-  cloud_sql_volume_name          = "cloudsql"
-  firebase_credentials_file_name = "firebase-adminsdk.json"
-  firebase_credentials_mount_dir = "/secrets"
-  firebase_credentials_path      = "${local.firebase_credentials_mount_dir}/${local.firebase_credentials_file_name}"
-  firebase_secret_volume_name    = "firebase-credentials"
+  cloud_sql_volume_name = "cloudsql"
 }
 
 resource "google_cloud_run_v2_service" "app" {
@@ -32,11 +28,6 @@ resource "google_cloud_run_v2_service" "app" {
       env {
         name  = "SPRING_PROFILES_ACTIVE"
         value = var.spring_profiles_active
-      }
-
-      env {
-        name  = "FIREBASE_CREDENTIALS_PATH"
-        value = local.firebase_credentials_path
       }
 
       env {
@@ -82,6 +73,17 @@ resource "google_cloud_run_v2_service" "app" {
       }
 
       env {
+        name = "FIREBASE_CREDENTIALS_JSON"
+
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.firebase_credentials.secret_id
+            version = "latest"
+          }
+        }
+      }
+
+      env {
         name = "CRAWLER_API_KEY"
 
         value_source {
@@ -90,6 +92,21 @@ resource "google_cloud_run_v2_service" "app" {
             version = "latest"
           }
         }
+      }
+
+      env {
+        name  = "SPRING_FLYWAY_ENABLED"
+        value = "true"
+      }
+
+      env {
+        name  = "SPRING_FLYWAY_BASELINE_ON_MIGRATE"
+        value = "true"
+      }
+
+      env {
+        name  = "SPRING_FLYWAY_BASELINE_VERSION"
+        value = "1"
       }
 
       dynamic "env" {
@@ -101,30 +118,12 @@ resource "google_cloud_run_v2_service" "app" {
         }
       }
 
-      volume_mounts {
-        name       = local.firebase_secret_volume_name
-        mount_path = local.firebase_credentials_mount_dir
-      }
-
       dynamic "volume_mounts" {
         for_each = length(var.cloud_sql_instances) > 0 ? [1] : []
 
         content {
           name       = local.cloud_sql_volume_name
           mount_path = "/cloudsql"
-        }
-      }
-    }
-
-    volumes {
-      name = local.firebase_secret_volume_name
-
-      secret {
-        secret = google_secret_manager_secret.firebase_credentials.secret_id
-
-        items {
-          version = "latest"
-          path    = local.firebase_credentials_file_name
         }
       }
     }

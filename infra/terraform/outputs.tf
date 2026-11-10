@@ -27,23 +27,3 @@ output "runtime_service_account_email" {
   description = "Cloud Run runtime service account email."
   value       = google_service_account.runtime.email
 }
-
-output "firebase_credentials_secret_id" {
-  description = "Secret Manager secret ID for Firebase Admin SDK credentials."
-  value       = google_secret_manager_secret.firebase_credentials.secret_id
-}
-
-output "db_password_secret_id" {
-  description = "Secret Manager secret ID for the application database password."
-  value       = google_secret_manager_secret.db_password.secret_id
-}
-
-output "db_url_secret_id" {
-  description = "Secret Manager secret ID for the backend JDBC URL."
-  value       = google_secret_manager_secret.db_url.secret_id
-}
-
-output "crawler_api_key_secret_id" {
-  description = "Secret Manager secret ID for the crawler ingestion API key."
-  value       = google_secret_manager_secret.crawler_api_key.secret_id
-}
