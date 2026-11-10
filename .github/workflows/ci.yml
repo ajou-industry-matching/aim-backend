@@ -65,3 +65,27 @@ jobs:
           FIREBASE_STORAGE_BUCKET: ci-smoke-test-bucket
           CRAWLER_API_KEY: ci-dummy-crawler-key
         run: bash .github/scripts/smoke-test-docker.sh
+
+  terraform:
+    name: Terraform fmt and validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          # init 이 받아 실행하는 provider 플러그인에 checkout 토큰을 남기지 않는다.
+          persist-credentials: false
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_wrapper: false
+
+      # provider schema 까지 받아 실제 속성 오류를 잡는다. state 는 쓰지 않는다.
+      - name: fmt and validate
+        working-directory: infra/terraform
+        run: |
+          terraform init -backend=false -input=false
+          terraform fmt -check -recursive
+          terraform validate
